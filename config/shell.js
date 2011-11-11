@@ -34,7 +34,7 @@ function Config () {
       ' i <query>          invoices    - load invoices with filter  > i <see examples below>'            + "\n" +
       '                                                             > i duedate>2012-11-01 amount<20000' + "\n" +
       '                                                             > i sortOn=amount event=6518'        + "\n" +
-      '                                                             > i supplier_id=21 amount=741999.47' + "\n" +
+      '                                                             > i supplier=21 amount=741999.47' + "\n" +
       '                                                             > i sortOn=amount event=165'         + "\n" +
       ' i c             invoice clear  - erase invoice cache        > i c'                               + "\n" +
       ' i p             invoice print  - show invoice cache         > i p'                                      + 
