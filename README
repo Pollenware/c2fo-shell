@@ -1,9 +1,9 @@
 Pollenware OCAP shell
 -------------------------------------------------------------------------------------------------   
- <user>@<instance>  (connect)   - connect to a OCAP instance > 3schofid@toysrus-test   
+ <user>@<instance>  (connect)   - connect to OCAP instance   > 3schofid@toysrus-test   
  <user>@<instance>@<emulate>    - connect, emulating         > jon_admin@costco@costco1 (admins)   
 -------------------------------------------------------------------------------------------------   
- b <evt>i           baskets     - show all baskets           > b 150        
+ b <evt>            baskets     - show all baskets           > b 150        
  b <evt> <bk>       baskets     - show basket by id          > b 155 1     
 -------------------------------------------------------------------------------------------------    
  cconnections                   - show all connections       > c     
@@ -37,6 +37,6 @@ Pollenware OCAP shell
 -------------------------------------------------------------------------------------------------    
  r                  repl        - start TCP REPL server      > r     
 -------------------------------------------------------------------------------------------------   
- t <inv> <inv>...   toggle      - inc/exc invs               > t i24849731 ei24855904...     
- t <inv> <inv>...   toggle      - inc/exc supp invs as buyer > t i21440051|24849731... 
+ t <inv> <inv>...   toggle      - include/exclude invoices   > t i24849731 ei24855904...     
+ t <inv> <inv>...   toggle      - inc/exc by supplier        > t i21440051|24849731... (buyers)
 -------------------------------------------------------------------------------------------------
