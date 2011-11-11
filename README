@@ -1,0 +1,42 @@
+Pollenware OCAP shell
+-------------------------------------------------------------------------------------------------   
+ <user>@<instance>  (connect)   - connect to a OCAP instance > 3schofid@toysrus-test   
+ <user>@<instance>@<emulate>    - connect, emulating         > jon_admin@costco@costco1 (admins)   
+-------------------------------------------------------------------------------------------------   
+ b <evt>i           baskets     - show all baskets           > b 150        
+ b <evt> <bk>       baskets     - show basket by id          > b 155 1     
+-------------------------------------------------------------------------------------------------    
+ cconnections                   - show all connections       > c     
+ c <cid>            connections - switch to connection by id > c 1   
+ c <cname>          connections - switch by name             > c user@instance   
+-------------------------------------------------------------------------------------------------   
+ d <cid>            delete      - delete connection by id    > d 4    
+ d <cname>          delete      - delete connection by name  > d usr@inst  
+-------------------------------------------------------------------------------------------------    
+ e                  environment - show environment detail    > e 
+ e <attr>           environment - show environment attr      > e org_id
+-------------------------------------------------------------------------------------------------   
+ h                  help        - show this message          > h 
+-------------------------------------------------------------------------------------------------   
+ i                  invoices    - load invoices              > i 
+ i <query>          invoices    - load invoices with filter  > i <see examples below>  
+                                                             > i duedate>2012-11-01 amount<20000   
+                                                             > i sortOn=amount event=6518    
+                                                             > i supplier_id=21 amount=741999.47   
+                                                             > i sortOn=amount event=165     
+ i c                inv clear   - erase invoice cache        > i c 
+ i p                inv print   - show invoice cache         > i p   
+-------------------------------------------------------------------------------------------------   
+ j <code>           javascript  - evaluate some code         > j Math.random(5); 
+-------------------------------------------------------------------------------------------------   
+ l                  log         - show log contents          > l     
+ l c                log clear   - clear log> l c   
+ l w                log write   - write log to disk          > l w   
+-------------------------------------------------------------------------------------------------   
+ o <evt> <bk> <bps> offer       - submit a discount          > o 169 90940 120   
+-------------------------------------------------------------------------------------------------    
+ r                  repl        - start TCP REPL server      > r     
+-------------------------------------------------------------------------------------------------   
+ t <inv> <inv>...   toggle      - inc/exc invs               > t i24849731 ei24855904...     
+ t <inv> <inv>...   toggle      - inc/exc supp invs as buyer > t i21440051|24849731... 
+-------------------------------------------------------------------------------------------------

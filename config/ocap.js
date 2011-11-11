@@ -1,0 +1,43 @@
+exports.Config = new Config();
+
+function Config () {
+  this.agentDefault       = 'OCAP HTTP client';
+  this.awaitingStatus     = 'awaiting buyer close';
+  this.BUYER              = 2;
+  this.connectMsg         = 'connecting...';
+  this.countdownMsg       = 'countdown to go-live';
+  this.debugPrefix        = '[DEBUG]';
+  this.delayMonitEvent    = 3000;
+  this.durationMsg        = 'duration';
+  this.errorAmbiguous     = 'ambiguous instruction, skipping';
+  this.errorNoConnection  = 'no connection';
+  this.errorPrefix        = '[error]';
+  this.eventsDetailAction = 'event check';
+  this.eventsDetailMsg    = 'checked event schedule';
+  this.failedLoginMsg     = 'failed login';
+  this.failedOfferMsg     = 'failed to place offer';
+  this.failedToggleMsg    = 'failed to update invoices';
+  this.foundEventMsg      = 'found event #';
+  this.invalidTokenMsg    = 'invalid token: ';
+  this.invoiceCountMsg    = 'total invoices: ';
+  this.invoicesPageSize   = 40;
+  this.invoiceRetriMsg    = 'starting invoice retrieval...';
+  this.liveStatus         = 'live';
+  this.networkError       = 'check the login details, host or network';
+  this.newCheckMsg        = 'new check date';
+  this.noDateFilterMsg    = 'date filter cannot accompany event filter, skipping';
+  this.noEventFilterMsg   = 'event filter cannot accompany date filter, skipping';
+  this.offerMsg           = 'placing offer...';
+  this.payThruMsg         = 'pay-thru date';
+  this.preofferStatus     = 'accepting pre-offers';
+  this.sessionGrantMsg    = 'session granted';
+  this.skippingMsg        = ', skipping';
+  this.statusPrefix       = 'status';
+  this.SUPPLIER           = 3;
+  this.successLoginMsg    = 'successful login';
+  this.successOfferMsg    = 'successful offer';
+  this.successToggleMsg   = 'successful invoice update';
+  this.toggleMsg          = 'updating invoices...';
+  this.userDetailsAction  = 'read user details';
+  this.userDetailsMsg     = 'retrieved user details';
+}

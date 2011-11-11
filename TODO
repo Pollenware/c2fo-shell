@@ -1,0 +1,16 @@
+Close OPS-143,OPS-145,OPS-146 
+buyer
+  1 periodic event status (callback on a timer)
+  2 supplier disposition during/after live event (callback on a timer)
+  3 flip supplier disposition during/after live event
+  4 edit event (cash_pool, amount, start_date, end_date, basket params, etc.)
+  5 end an event
+  6 exclude a supplier
+  7 mist-mailer hooks
+supplier
+  1 event status (scheduled vs. live vs. ended vs. disposition avail)
+  2 bid status during live event (callback on a timer)
+  3 periodic event status (callback on a timer)
+  4 edit company or user profile attributes
+call the Tervela C API via node2tva add-on
+debian package
