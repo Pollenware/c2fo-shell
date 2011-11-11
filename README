@@ -22,7 +22,7 @@ Pollenware OCAP shell
  i <query>          invoices    - load invoices with filter  > i <see examples below>  
                                                              > i duedate>2012-11-01 amount<20000   
                                                              > i sortOn=amount event=6518    
-                                                             > i supplier_id=21 amount=741999.47   
+                                                             > i supplier=21 amount=741999.47   
                                                              > i sortOn=amount event=165     
  i c                inv clear   - erase invoice cache        > i c 
  i p                inv print   - show invoice cache         > i p   
