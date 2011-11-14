@@ -78,7 +78,7 @@ ocap-shell handles multiplexing to many OCAP instances via support for separate 
       "2": "walden0901@kbrothers",
       "3": "shartleyd787@autoiameri"
     }
-    shartleyd787@autoiameri> d2
+    shartleyd787@autoiameri> d 2
     shartleyd787@autoiameri> c
     {
       "1": "jsmihters84716@homeelectronics",
