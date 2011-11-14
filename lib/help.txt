@@ -4,7 +4,7 @@
  b <evt>            baskets     - show all baskets           > b 150        
  b <evt> <bk>       baskets     - show basket by id          > b 155 1     
 -------------------------------------------------------------------------------------------------    
- cconnections                   - show all connections       > c     
+ c                  connections - show all connections       > c     
  c <cid>            connections - switch to connection by id > c 1   
  c <cname>          connections - switch by name             > c user@instance   
 -------------------------------------------------------------------------------------------------   
