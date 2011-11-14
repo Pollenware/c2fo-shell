@@ -1,9 +1,5 @@
-                                  ocap-shell
-
-                           Command-line interface for
-               Pollenware's Optimized Collaborative Auction Platform                                                             
-
---------------------------------------------------------------------------------   
+ocap-shell provides authenticated users with a set of commands 
+intended for quick and for efficient navigation of Pollenware's platform.
 
 SIGN IN
 
@@ -288,4 +284,3 @@ OFFER DISCOUNT
     autoiameri - offer placed
     shartleyd787@autoiameri> 
 
---------------------------------------------------------------------------------   
