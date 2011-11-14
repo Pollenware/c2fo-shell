@@ -2,6 +2,7 @@
 var Config       = require( './config/shell.js' ).Config,
     CommandLine  = require( './lib/commandline.js' ).CommandLine,
     C2FO         = require( './lib/c2fo.js' ).C2FO,
+    Util         = require( './lib/util.js' ).Util,
     net          = require( "net" ),
     repl         = require( "repl" ),
     version      = '0.0.1';
@@ -118,7 +119,7 @@ c2fo.cli.handleCommand = function ( command ) {
 
     var connections  = c2fo.auth.connections;
     for ( var c in connections ) {
-      connections[c] = c2fo.sanitize(connections[c]);
+      connections[c] = Util.sanitizeConnection( connections[c] );
     }
     var found     = false;
     if (  /^\s*(c|connections)\s+[\@a-zA-Z0-9\-_]+$/.test( command ) ) {
@@ -207,7 +208,7 @@ c2fo.cli.handleCommand = function ( command ) {
 
     var login = c2fo.auth.connectionString();
     var connection = c2fo.auth.connections[login];
-    connection = c2fo.sanitize( connection );
+    connection = Util.sanitizeConnection( connection );
     if ( connection && /^\s*(e|environment)\s+[a-zA-Z0-9\-_]+$/.test( command ) ) {
       var c = command.split( /\s+/ );
       var attribute = c[1];
@@ -249,6 +250,8 @@ c2fo.cli.handleCommand = function ( command ) {
   //
   else if ( /^\s*(h|help)\s*$/.test( command ) ) {
     Config.helpMsg();
+    c2fo.cli.loop();
+    return;
   }
 
   //
@@ -332,7 +335,13 @@ c2fo.cli.handleCommand = function ( command ) {
     else if ( instruction == 'w' || instruction == 'write' ) {
       var logFile = Config.logFile || ( process.argv[1].split( '/' ).pop() + '.log' );
       console.log( Config.logWriteMsg + ' ' + logFile + '...' );
-      c2fo.appendFile( logFile,  logText );
+      try {
+        Util.appendFile( logFile,  logText );
+      }
+      catch ( err ) {
+        console.log( err );
+        self.cli.loop();
+      }
     }
     else {
       console.log( logText );
