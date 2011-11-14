@@ -1,11 +1,10 @@
-ocap-shell provides authenticated users with a set of commands 
-intended for quick and efficient navigation of Pollenware's platform.
+ocap-shell - text-based interface to Pollenware software platform
 
-SIGN IN
+# SIGN IN
 
-  FROM SYSTEM PROMPT
+## FROM SYSTEM PROMPT
 
-    FAIL
+### FAIL
 
     $ ./ocap -u c2foUsername -i c2foInstance
     Password: ***********
@@ -16,7 +15,7 @@ SIGN IN
     type 'h' for help
     ocap> 
 
-    SUCCEED
+### SUCCEED
 
     $ ./ocap -u c2foUsername -i c2foInstance
     Password: ***********
@@ -32,7 +31,7 @@ SIGN IN
     c2foInstance - #23: status: accepting pre-offers
     c2foUsername@c2foInstance> 
 
-  FROM OCAP CLI
+## WITHIN OCAP CLI
 
     $ ./ocap 
     ocap (pollenware OCAP) v0.0.1 Mon Nov 14 2011 00:59:42 GMT+0000 (UTC)
@@ -43,9 +42,11 @@ SIGN IN
     c2foInstance - session granted
     [...]
 
---------------------------------------------------------------------------------   
+---
 
-LIST CONNECTIONS
+# CONNECTIONS
+
+## LIST
 
     c2foUsername@c2foInstance> c
     {
@@ -55,17 +56,17 @@ LIST CONNECTIONS
     }
     c2foUsername@c2foInstance>
 
-SWITCH CONNECTIONS BY ID
+## SWITCH BY ID
 
     c2foUsername@c2foInstance> c 2
     walden0901@kbrothers>
 
-SWITCH CONNECTIONS BY NAME
+## SWITCH BY NAME
 
     walden0901@kbrothers> c 3
     shartleyd787@autoiameri>
 
-DELETE CONNECTION
+## DELETE 
 
     shartleyd787@autoiameri> c
     {
@@ -81,9 +82,11 @@ DELETE CONNECTION
     }
     shartleyd787@autoiameri> 
 
---------------------------------------------------------------------------------   
+---
 
-DISPLAY ENVIRONMENT DETAIL
+# ENVIRONMENT
+
+## DETAIL
 
     shartleyd787@autoiameri> e
     {
@@ -110,17 +113,17 @@ DISPLAY ENVIRONMENT DETAIL
     shartleyd787@autoiameri> 
 
 
-DISPLAY ENVIRONMENT ATTRIBUTE
+## SPECIFIC ATTRIBUTE
 
     shartleyd787@autoiameri> e org_id
     21441276
     shartleyd787@autoiameri> 
 
---------------------------------------------------------------------------------   
+---
 
-BROWSE EVENTS FOR THIS CONNECTION
+# EVENTS
 
-  FULL DETAIL
+## DETAIL 
 
     shartleyd787@autoiameri> e events
     {
@@ -132,13 +135,13 @@ BROWSE EVENTS FOR THIS CONNECTION
         "is_buyer_live": false,
         [...]
 
-  SPECIFIC EVENT, ATTRIBUTE
+##  SPECIFIC ATTRIBUTE
 
     shartleyd787@autoiameri> j c2fo.auth.connections[c2fo.auth.connectionString()].events[10].start_time
     "2011-11-15T19:00:00.000Z"
     shartleyd787@autoiameri>
 
-  BASKET DETAIL
+##  ALL BASKET DETAIL
 
     shartleyd787@autoiameri> b 23
     {
@@ -147,7 +150,7 @@ BROWSE EVENTS FOR THIS CONNECTION
       "bid_increment": 0.03,
       [...]
 
-  1 BASKET'S DETAIL
+## 1 BASKET DETAIL
 
     shartleyd787@autoiameri> b 23 0
     {
@@ -161,9 +164,11 @@ BROWSE EVENTS FOR THIS CONNECTION
     }
     shartleyd787@autoiameri>
 
---------------------------------------------------------------------------------   
+---
 
-RETRIEVE INVOICE PAGE
+# INVOICES
+
+## DOWNLOAD 1 PAGE
 
     shartleyd787@autoiameri> i
     starting invoice retrieval...
@@ -180,34 +185,34 @@ RETRIEVE INVOICE PAGE
     shartleyd787@autoiameri> j Object.keys(c2fo.auth.connections[c2fo.auth.connectionString()].invoices_local).length 
     80 
 
-RETRIEVE INVOICE PAGE USING FILTERS
+## DOWNLOAD USING FILTERS
 
-  BY DUE DATE
+### BY DUE DATE
 
     shartleyd787@autoiameri> i duedate>2012-11-01
     [...]
  
-  BY AMOUNT
+### BY AMOUNT
 
     shartleyd787@autoiameri> i amount<55000
     [...]
  
-  BY EVENT
+### BY EVENT
 
     shartleyd787@autoiameri> i event=16
     [...]
  
-  SPECIFY SORT ORDER OF RETIEVED PAGE
+### SPECIFY SORT ORDER OF RETIEVED PAGE
 
     shartleyd787@autoiameri> i duedate>2012-11-01 sortOn=amount
     [...]
  
-  MIX & MATACH AS DESIRED...
+### MIX & MATACH AS DESIRED...
 
     shartleyd787@autoiameri> i duedate=2012-11-01 amount<211000 sortOn=amount
     [...]
  
-PRINT RETRIEVED INVOICES
+## PRINT 
 
     shartleyd787@autoiameri> i p
     printing invoices...
@@ -218,7 +223,7 @@ PRINT RETRIEVED INVOICES
     8596115,21444286,2011-09-08,39876,,Simeon Hartley D Entep
     [...]
 
-CLEAR RETRIEVED INVOICES
+## CLEAR
 
     shartleyd787@autoiameri> i c
     trashing local copies of invoices...
@@ -226,7 +231,7 @@ CLEAR RETRIEVED INVOICES
     0
     shartleyd787@autoiameri>
 
-INCLUDE/EXCLUDE INVOICES AS SUPPLIER
+## INCLUDE/EXCLUDE AS SUPPLIER
 
     shartleyd787@autoiameri> t e127689 e128881 i129221...
     updating invoices...
@@ -234,7 +239,7 @@ INCLUDE/EXCLUDE INVOICES AS SUPPLIER
     autoiameri - invoices updated
     shartleyd787@autoiameri> 
 
-INCLUDE/EXCLUDE INVOICES AS BUYER
+## INCLUDE/EXCLUDE AS BUYER
 
     autoiameri1@autoiameri> t e2144500|127689 e2144689|128881...
     updating invoices...
@@ -242,9 +247,11 @@ INCLUDE/EXCLUDE INVOICES AS BUYER
     autoiameri - invoices updated
     autoiameri1@autoiameri> 
 
---------------------------------------------------------------------------------   
+---
 
-PRINT LOG
+# LOG
+
+## PRINT
 
     shartleyd787@autoiameri> l
     [
@@ -255,21 +262,23 @@ PRINT LOG
      "8596112,21444286,2011-09-08,108256.56,,Garnier",
     [...]
 
-APPEND CURRENT LOG TO DISK
+## APPEND CURRENT TO DISK
 
     shartleyd787@autoiameri> l w
     writing log to log/ocap.log...
     shartleyd787@autoiameri> 
 
-CLEAR LOG
+## CLEAR
 
     shartleyd787@autoiameri> l c
     log cleared
     shartleyd787@autoiameri> 
 
---------------------------------------------------------------------------------   
+---
 
-OFFER DISCOUNT
+# DISCOUNTS
+
+## OFFER
 
     shartleyd787@autoiameri> b 163 0
     {
@@ -283,4 +292,6 @@ OFFER DISCOUNT
     shartleyd787@autoiameri> autoiameri - successful offer
     autoiameri - offer placed
     shartleyd787@autoiameri> 
+
+---
 
