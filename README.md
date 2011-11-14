@@ -62,12 +62,12 @@ ocap-shell handles multiplexing to many OCAP instances via support for separate 
 
 ## SWITCH BY ID
 
-    c2foUsername@c2foInstance> c 2
+    c2foUsername@c2foInstance> 2
     walden0901@kbrothers>
 
 ## SWITCH BY NAME
 
-    walden0901@kbrothers> c 3
+    walden0901@kbrothers> shartleyd787@autoiameri
     shartleyd787@autoiameri>
 
 ## DELETE 
