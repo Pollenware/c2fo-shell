@@ -219,7 +219,7 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
     shartleyd787@autoiameri> i duedate>2012-11-01 sortOn=amount
     [...]
  
-### MIX & MATACH AS DESIRED...
+### MIX & MATCH AS DESIRED...
 
     shartleyd787@autoiameri> i duedate=2012-11-01 amount<211000 sortOn=amount
     [...]
