@@ -9,7 +9,7 @@ function Config () {
   this.errorPrefix       = '[error]';
   this.exitMsg           = "leaving OCAP";
   this.helpBlurb         = "type 'h' for help";
-  this.helpMsg           = function ( cli ) { var readme = Util.spitFile( 'README', cli ); };
+  this.helpMsg           = function ( cli ) { var readme = Util.spitFile( 'lib/help.txt', cli ); };
   this.invClearMsg       = 'trashing local copies of invoices...';
   // "voucher_id","buyer_id","supplier_id","event_id","short_name","name","group_id",
   // "payment_due_date","amount""invoice_date","is_buyer_included","is_supplier_included"

@@ -7,10 +7,11 @@ buyer
   5 end an event
   6 exclude a supplier
   7 mist-mailer hooks
+  8 pre-bid csv
+  9 event disposition csv
 supplier
-  1 event status (scheduled vs. live vs. ended vs. disposition avail)
-  2 bid status during live event (callback on a timer)
-  3 periodic event status (callback on a timer)
-  4 edit company or user profile attributes
+  1 periodic bid status (callback on a timer)
+  2 messages published by buyer
+  3 edit company or user profile attributes
 call the Tervela C API via node2tva add-on
 debian package

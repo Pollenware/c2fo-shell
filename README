@@ -1,42 +1,292 @@
-Pollenware OCAP shell
--------------------------------------------------------------------------------------------------   
- <user>@<instance>  (connect)   - connect to OCAP instance   > 3schofid@toysrus-test   
- <user>@<instance>@<emulate>    - connect, emulating         > jon_admin@costco@costco1 (admins)   
--------------------------------------------------------------------------------------------------   
- b <evt>            baskets     - show all baskets           > b 150        
- b <evt> <bk>       baskets     - show basket by id          > b 155 1     
--------------------------------------------------------------------------------------------------    
- cconnections                   - show all connections       > c     
- c <cid>            connections - switch to connection by id > c 1   
- c <cname>          connections - switch by name             > c user@instance   
--------------------------------------------------------------------------------------------------   
- d <cid>            delete      - delete connection by id    > d 4    
- d <cname>          delete      - delete connection by name  > d usr@inst  
--------------------------------------------------------------------------------------------------    
- e                  environment - show environment detail    > e 
- e <attr>           environment - show environment attr      > e org_id
--------------------------------------------------------------------------------------------------   
- h                  help        - show this message          > h 
--------------------------------------------------------------------------------------------------   
- i                  invoices    - load invoices              > i 
- i <query>          invoices    - load invoices with filter  > i <see examples below>  
-                                                             > i duedate>2012-11-01 amount<20000   
-                                                             > i sortOn=amount event=6518    
-                                                             > i supplier=21 amount=741999.47   
-                                                             > i sortOn=amount event=165     
- i c                inv clear   - erase invoice cache        > i c 
- i p                inv print   - show invoice cache         > i p   
--------------------------------------------------------------------------------------------------   
- j <code>           javascript  - evaluate some code         > j Math.random(5); 
--------------------------------------------------------------------------------------------------   
- l                  log         - show log contents          > l     
- l c                log clear   - clear log> l c   
- l w                log write   - write log to disk          > l w   
--------------------------------------------------------------------------------------------------   
- o <evt> <bk> <bps> offer       - submit a discount          > o 169 90940 120   
--------------------------------------------------------------------------------------------------    
- r                  repl        - start TCP REPL server      > r     
--------------------------------------------------------------------------------------------------   
- t <inv> <inv>...   toggle      - include/exclude invoices   > t i24849731 ei24855904...     
- t <inv> <inv>...   toggle      - inc/exc by supplier        > t i21440051|24849731... (buyers)
--------------------------------------------------------------------------------------------------
+                                  ocap-shell
+
+                           Command-line interface for
+               Pollenware's Optimized Collaborative Auction Platform                                                             
+
+--------------------------------------------------------------------------------   
+
+SIGN IN
+
+  FROM SYSTEM PROMPT
+
+    FAIL
+
+    $ ./ocap -u c2foUsername -i c2foInstance
+    Password: ***********
+    connecting...
+    [error] check the login details, host or network
+    connection could not be established: c2foUsername@c2foInstance
+    ocap (pollenware OCAP) v0.0.1 Mon Nov 14 2011 00:59:42 GMT+0000 (UTC)
+    type 'h' for help
+    ocap> 
+
+    SUCCEED
+
+    $ ./ocap -u c2foUsername -i c2foInstance
+    Password: ***********
+    connecting...
+    c2foInstance - session granted
+    c2foInstance - retrieved user details
+    c2foInstance - undefined
+    c2foInstance - found event #23
+    c2foInstance - #23: countdown to go-live: 1d17h58m55s
+    c2foInstance - #23: duration: 0d0h30m0s
+    c2foInstance - #23: new check date: 2011-11-17T00:00:00Z
+    c2foInstance - #23: pay-thru date: 2011-11-17T00:00:00Z
+    c2foInstance - #23: status: accepting pre-offers
+    c2foUsername@c2foInstance> 
+
+  FROM OCAP CLI
+
+    $ ./ocap 
+    ocap (pollenware OCAP) v0.0.1 Mon Nov 14 2011 00:59:42 GMT+0000 (UTC)
+    type 'h' for help
+    ocap> c2foUsername@c2foInstance
+    Password: **********
+    connecting...
+    c2foInstance - session granted
+    [...]
+
+--------------------------------------------------------------------------------   
+
+LIST CONNECTIONS
+
+    c2foUsername@c2foInstance> c
+    {
+      "1": "jsmihters84716@homeelectronics",
+      "2": "walden0901@kbrothers",
+      "3": "shartleyd787@autoiameri"
+    }
+    c2foUsername@c2foInstance>
+
+SWITCH CONNECTIONS BY ID
+
+    c2foUsername@c2foInstance> c 2
+    walden0901@kbrothers>
+
+SWITCH CONNECTIONS BY NAME
+
+    walden0901@kbrothers> c 3
+    shartleyd787@autoiameri>
+
+DELETE CONNECTION
+
+    shartleyd787@autoiameri> c
+    {
+      "1": "jsmihters84716@homeelectronics",
+      "2": "walden0901@kbrothers",
+      "3": "shartleyd787@autoiameri"
+    }
+    shartleyd787@autoiameri> d2
+    shartleyd787@autoiameri> c
+    {
+      "1": "jsmihters84716@homeelectronics",
+      "3": "shartleyd787@autoiameri"
+    }
+    shartleyd787@autoiameri> 
+
+--------------------------------------------------------------------------------   
+
+DISPLAY ENVIRONMENT DETAIL
+
+    shartleyd787@autoiameri> e
+    {
+      "events": [
+        "163"
+      ],
+      "invoices": 0,
+      "user": "pete_admin",
+      "instance": "autoiameri",
+      "sessionCookie": "%2B0...cf37;",
+      "id": 6,
+      "lastActive": "2011-11-14T03:22:45.000Z",
+      "user_name": "shartleyd787",
+      "first_name": "Newland",
+      "last_name": "Schofield",
+      "user_id": 17352,
+      "user_type": 3,
+      "org_id": 21441276,
+      "enrollment_status": 7,
+      "emulating": true,
+      "is_net_negative": false,
+      "messages": [],
+      "timeElapse": "0d0h-3m-4s"
+    }
+    shartleyd787@autoiameri> 
+
+
+DISPLAY ENVIRONMENT ATTRIBUTE
+
+    shartleyd787@autoiameri> e org_id
+    21441276
+    shartleyd787@autoiameri> 
+
+--------------------------------------------------------------------------------   
+
+BROWSE EVENTS FOR THIS CONNECTION
+
+  FULL DETAIL
+
+    shartleyd787@autoiameri> e events
+    {
+      "23": {
+        "event_id": 23,
+        "org_id": 21428986,
+        "buyer_id": 21428986,  
+        "is_live": false,
+        "is_buyer_live": false,
+        [...]
+
+  SPECIFIC EVENT, ATTRIBUTE
+
+    shartleyd787@autoiameri> j c2fo.auth.connections[c2fo.auth.connectionString()].events[10].start_time
+    "2011-11-15T19:00:00.000Z"
+    shartleyd787@autoiameri>
+
+  BASKET DETAIL
+
+    shartleyd787@autoiameri> b 23
+    {
+      "title": "1-10 Days",
+      "id": 107,
+      "bid_increment": 0.03,
+      [...]
+
+  1 BASKET'S DETAIL
+
+    shartleyd787@autoiameri> b 23 0
+    {
+      "title": "1-10 Days",
+      "id": 107,
+      "bid_increment": 0.03,
+      "starting_bid": 0.03,
+      "is_discount_based": false,
+      "min": null,
+      "max": 10
+    }
+    shartleyd787@autoiameri>
+
+--------------------------------------------------------------------------------   
+
+RETRIEVE INVOICE PAGE
+
+    shartleyd787@autoiameri> i
+    starting invoice retrieval...
+    shartleyd787@autoiameri> 
+    autoiameri - total invoices: 40
+    autoiameri - invoices retrieved
+    shartleyd787@autoiameri> j Object.keys(c2fo.auth.connections[c2fo.auth.connectionString()].invoices_local).length 
+    40
+    shartleyd787@autoiameri> i
+    starting invoice retrieval...
+    shartleyd787@autoiameri> 
+    autoiameri - total invoices: 40
+    autoiameri - invoices retrieved
+    shartleyd787@autoiameri> j Object.keys(c2fo.auth.connections[c2fo.auth.connectionString()].invoices_local).length 
+    80 
+
+RETRIEVE INVOICE PAGE USING FILTERS
+
+  BY DUE DATE
+
+    shartleyd787@autoiameri> i duedate>2012-11-01
+    [...]
+ 
+  BY AMOUNT
+
+    shartleyd787@autoiameri> i amount<55000
+    [...]
+ 
+  BY EVENT
+
+    shartleyd787@autoiameri> i event=16
+    [...]
+ 
+  SPECIFY SORT ORDER OF RETIEVED PAGE
+
+    shartleyd787@autoiameri> i duedate>2012-11-01 sortOn=amount
+    [...]
+ 
+  MIX & MATACH AS DESIRED...
+
+    shartleyd787@autoiameri> i duedate=2012-11-01 amount<211000 sortOn=amount
+    [...]
+ 
+PRINT RETRIEVED INVOICES
+
+    shartleyd787@autoiameri> i p
+    printing invoices...
+    pollenware_invoice_id,supplier_id,payment_due_date,amount,group_id,name
+    8594105,21443828,2011-09-04,319.2,,Waltman Pharmaceuticals Inc
+    8596112,21444286,2011-09-08,108256.56,,Simeon Hartley D Entep
+    8596113,21444286,2011-09-08,139181.28,,Simeon Hartley D Entep
+    8596115,21444286,2011-09-08,39876,,Simeon Hartley D Entep
+    [...]
+
+CLEAR RETRIEVED INVOICES
+
+    shartleyd787@autoiameri> i c
+    trashing local copies of invoices...
+    shartleyd787@autoiameri> j Object.keys(c2fo.auth.connections[c2fo.auth.connectionString()].invoices_local).length
+    0
+    shartleyd787@autoiameri>
+
+INCLUDE/EXCLUDE INVOICES AS SUPPLIER
+
+    shartleyd787@autoiameri> t e127689 e128881 i129221...
+    updating invoices...
+    shartleyd787@autoiameri> autoiameri - successful invoice update
+    autoiameri - invoices updated
+    shartleyd787@autoiameri> 
+
+INCLUDE/EXCLUDE INVOICES AS BUYER
+
+    autoiameri1@autoiameri> t e2144500|127689 e2144689|128881...
+    updating invoices...
+    autoiameri1@autoiameri> autoiameri - successful invoice update
+    autoiameri - invoices updated
+    autoiameri1@autoiameri> 
+
+--------------------------------------------------------------------------------   
+
+PRINT LOG
+
+    shartleyd787@autoiameri> l
+    [
+     200,
+     0,
+     "pollenware_invoice_id,supplier_id,payment_due_date,amount,group_id,name",
+     "8594105,21443828,2011-09-04,319.2,,Waltman Pharmaceuticals Inc",
+     "8596112,21444286,2011-09-08,108256.56,,Garnier",
+    [...]
+
+APPEND CURRENT LOG TO DISK
+
+    shartleyd787@autoiameri> l w
+    writing log to log/ocap.log...
+    shartleyd787@autoiameri> 
+
+CLEAR LOG
+
+    shartleyd787@autoiameri> l c
+    log cleared
+    shartleyd787@autoiameri> 
+
+--------------------------------------------------------------------------------   
+
+OFFER DISCOUNT
+
+    shartleyd787@autoiameri> b 163 0
+    {
+      "id": 66929,
+      "total_invoice_amount": 8778.64,
+      "num_invoices": 4,
+      "supplier_id": 21441276,
+    [..]
+    shartleyd787@autoiameri> o 163 66929 120
+    placing offer...
+    shartleyd787@autoiameri> autoiameri - successful offer
+    autoiameri - offer placed
+    shartleyd787@autoiameri> 
+
+--------------------------------------------------------------------------------   
