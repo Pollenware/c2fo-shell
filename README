@@ -107,7 +107,6 @@ DISPLAY ENVIRONMENT DETAIL
       "user_type": 3,
       "org_id": 21441276,
       "enrollment_status": 7,
-      "emulating": true,
       "is_net_negative": false,
       "messages": [],
       "timeElapse": "0d0h-3m-4s"
