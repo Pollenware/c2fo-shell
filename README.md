@@ -1,6 +1,8 @@
-ocap-shell - text-based interface to Pollenware software platform
+ocap-shell - text-based interface to Pollenware optimized collaborative auction platform
 
 # SIGN IN
+
+Signing into the system with authentication credentials can take place either from the system prompt, when booting ocap-shell, or after the shell is up, as a command:
 
 ## FROM SYSTEM PROMPT
 
@@ -46,6 +48,8 @@ ocap-shell - text-based interface to Pollenware software platform
 
 # CONNECTIONS
 
+ocap-shell handles multiplexing to many OCAP instances via support for separate connections and an ability to switch between them:
+
 ## LIST
 
     c2foUsername@c2foInstance> c
@@ -86,6 +90,8 @@ ocap-shell - text-based interface to Pollenware software platform
 
 # ENVIRONMENT
 
+Once successfully connected to an OCAP instance, the environment can be displayed:
+
 ## DETAIL
 
     shartleyd787@autoiameri> e
@@ -123,6 +129,8 @@ ocap-shell - text-based interface to Pollenware software platform
 
 # EVENTS
 
+Events can be explored by dumping all the information to the screen or log, or optionally pulling out specific attributes for viewing:
+
 ## DETAIL 
 
     shartleyd787@autoiameri> e events
@@ -142,6 +150,8 @@ ocap-shell - text-based interface to Pollenware software platform
     shartleyd787@autoiameri>
 
 ##  ALL BASKET DETAIL
+
+Relevant baskets within an event can also be displayed:
 
     shartleyd787@autoiameri> b 23
     {
@@ -167,6 +177,8 @@ ocap-shell - text-based interface to Pollenware software platform
 ---
 
 # INVOICES
+
+Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_ is defined as the number of records configured in `config/ocap.js/Config.invoicesPageSize`.  ocap-shell keeps track of the pagination and will pull down new invoices with every call until there are no more to retrieve.  Once the ocap-shell user has locally downloaded the invoice set she needs, they can be printed, logged, or otherwise manipulated:
 
 ## DOWNLOAD 1 PAGE
 
@@ -251,6 +263,8 @@ ocap-shell - text-based interface to Pollenware software platform
 
 # LOG
 
+A simple logging facility allows the ocap-shell user to write her data to disk at any time:
+
 ## PRINT
 
     shartleyd787@autoiameri> l
@@ -278,6 +292,8 @@ ocap-shell - text-based interface to Pollenware software platform
 
 # DISCOUNTS
 
+Pre-offers before an event and offers during an event are both supported transparently within the *o* (*offer*) command:
+
 ## OFFER
 
     shartleyd787@autoiameri> b 163 0
@@ -293,5 +309,4 @@ ocap-shell - text-based interface to Pollenware software platform
     autoiameri - offer placed
     shartleyd787@autoiameri> 
 
----
 
