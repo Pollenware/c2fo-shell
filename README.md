@@ -229,10 +229,10 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
     shartleyd787@autoiameri> i p
     printing invoices...
     pollenware_invoice_id,supplier_id,payment_due_date,amount,group_id,name
-    8594105,21443828,2011-09-04,319.2,,Waltman Pharmaceuticals Inc
-    8596112,21444286,2011-09-08,108256.56,,Simeon Hartley D Entep
-    8596113,21444286,2011-09-08,139181.28,,Simeon Hartley D Entep
-    8596115,21444286,2011-09-08,39876,,Simeon Hartley D Entep
+    8594105,21443828,2011-09-04,319.2,,Simeon Hartley D Enterp
+    8596112,21444286,2011-09-08,108256.56,,Simeon Hartley D Enterp
+    8596113,21444286,2011-09-08,139181.28,,Simeon Hartley D Enterp
+    8596115,21444286,2011-09-08,39876,,Simeon Hartley D Enterp
     [...]
 
 ## CLEAR
