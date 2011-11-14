@@ -249,8 +249,7 @@ c2fo.cli.handleCommand = function ( command ) {
   // help - h
   //
   else if ( /^\s*(h|help)\s*$/.test( command ) ) {
-    Config.helpMsg();
-    c2fo.cli.loop();
+    Config.helpMsg( cli );
     return;
   }
 
