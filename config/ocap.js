@@ -22,6 +22,7 @@ function Config () {
   this.invoiceCountMsg    = 'total invoices: ';
   this.invoicesPageSize   = 40;
   this.invoiceRetriMsg    = 'starting invoice retrieval...';
+  this.isSecure           = true;
   this.liveStatus         = 'live';
   this.networkError       = 'check the login details, host or network';
   this.newCheckMsg        = 'new check date';
