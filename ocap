@@ -246,6 +246,27 @@ c2fo.cli.handleCommand = function ( command ) {
   }
 
   //
+  // flip - f
+  //
+  else if ( /^\s*(f|flip)\s+\d+\s+\d+\s+[012]+\s*$/.test( command ) ) {
+
+    // if ( !c2fo.auth.hasConnections() ) {
+    //   c2fo.cli.loop();
+    //   return;
+    // }
+
+    command = command.split( /\s+/ );
+    var connectionId = c2fo.auth.connectionString();
+    var connection   = c2fo.auth.connections[connectionId];
+    var eventId      = command[1] && command[1].trim();
+    var basket       = command[2] && command[2].trim();
+    var status       = command[3] && command[3].trim();
+    console.log( 'eid ' + eventId + ' basket ' + basket + ' status ' + status );
+    c2fo.cli.loop();
+    return;
+  }
+
+  //
   // help - h
   //
   else if ( /^\s*(h|help)\s*$/.test( command ) ) {
