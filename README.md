@@ -110,7 +110,7 @@ Once successfully connected to an OCAP instance, the environment can be displaye
       "last_name": "Schofield",
       "user_id": 17352,
       "user_type": 3,
-      "org_id": 21441276,
+      "org_id": 31551276,
       "enrollment_status": 7,
       "is_net_negative": false,
       "messages": [],
@@ -122,7 +122,7 @@ Once successfully connected to an OCAP instance, the environment can be displaye
 ## SPECIFIC ATTRIBUTE
 
     shartleyd787@autoiameri> e org_id
-    21441276
+    31551276
     shartleyd787@autoiameri> 
 
 ---
@@ -229,10 +229,10 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
     shartleyd787@autoiameri> i p
     printing invoices...
     pollenware_invoice_id,supplier_id,payment_due_date,amount,group_id,name
-    8594105,21443828,2011-09-04,319.2,,Simeon Hartley D Enterp
-    8596112,21444286,2011-09-08,108256.56,,Simeon Hartley D Enterp
-    8596113,21444286,2011-09-08,139181.28,,Simeon Hartley D Enterp
-    8596115,21444286,2011-09-08,39876,,Simeon Hartley D Enterp
+    8594105,31553828,2011-09-04,319.2,,Simeon Hartley D Enterp
+    8596112,31554286,2011-09-08,108256.56,,Simeon Hartley D Enterp
+    8596113,31554286,2011-09-08,139181.28,,Simeon Hartley D Enterp
+    8596115,31554286,2011-09-08,39876,,Simeon Hartley D Enterp
     [...]
 
 ## CLEAR
@@ -253,7 +253,7 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
 
 ## INCLUDE/EXCLUDE AS BUYER
 
-    autoiameri1@autoiameri> t e2144500|127689 e2144689|128881...
+    autoiameri1@autoiameri> t e3155500|127689 e3155689|128881...
     updating invoices...
     autoiameri1@autoiameri> autoiameri - successful invoice update
     autoiameri - invoices updated
@@ -272,8 +272,8 @@ A simple logging facility allows the ocap-shell user to write her data to disk a
      200,
      0,
      "pollenware_invoice_id,supplier_id,payment_due_date,amount,group_id,name",
-     "8594105,21443828,2011-09-04,319.2,,Waltman Pharmaceuticals Inc",
-     "8596112,21444286,2011-09-08,108256.56,,Garnier",
+     "8594105,31553828,2011-09-04,319.2,,Waltman Pharmaceuticals Inc",
+     "8596112,31554286,2011-09-08,108256.56,,Garnier",
     [...]
 
 ## APPEND CURRENT TO DISK
@@ -301,7 +301,7 @@ Pre-offers before an event and offers during an event are both supported transpa
       "id": 66929,
       "total_invoice_amount": 8778.64,
       "num_invoices": 4,
-      "supplier_id": 21441276,
+      "supplier_id": 31551276,
     [..]
     shartleyd787@autoiameri> o 163 66929 120
     placing offer...
