@@ -11,7 +11,9 @@ function Config () {
   this.durationMsg        = 'duration';
   this.errorAmbiguous     = 'ambiguous instruction, skipping';
   this.errorNoConnection  = 'no connection';
+  this.errorNoResponse    = 'no response data';
   this.errorPrefix        = '[error]';
+  this.errorSupplierCant  = "suppliers don't have this feature";
   this.eventsDetailAction = 'event check';
   this.eventsDetailMsg    = 'checked event schedule';
   this.failedLoginMsg     = 'failed login';

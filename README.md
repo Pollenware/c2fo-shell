@@ -309,4 +309,12 @@ Pre-offers before an event and offers during an event are both supported transpa
     autoiameri - offer placed
     shartleyd787@autoiameri> 
 
+---
+
+# LOCKS
+
+Individual basket statuses are edited via disposition locks:
+
+    shartleyd787@autoiameri> L 304 34218890 92448 1
+    {"details":["34218890","basket","92448","status"],"supplierId":"34218890","status":"1"}    
 
