@@ -1,46 +1,35 @@
+var Util = require( '../lib/util.js' ).Util;
+
 exports.Config = new Config();
 
 function Config () {
-  this.agentDefault       = 'OCAP HTTP client';
-  this.awaitingStatus     = 'awaiting buyer close';
-  this.BUYER              = 2;
-  this.connectMsg         = 'connecting...';
-  this.countdownMsg       = 'countdown to go-live';
-  this.debugPrefix        = '[DEBUG]';
-  this.delayMonitEvent    = 3000;
-  this.durationMsg        = 'duration';
-  this.errorAmbiguous     = 'ambiguous instruction, skipping';
-  this.errorNoConnection  = 'no connection';
-  this.errorNoResponse    = 'no response data';
-  this.errorPrefix        = '[error]';
-  this.errorSupplierCant  = "suppliers don't have this feature";
-  this.eventsDetailAction = 'event check';
-  this.eventsDetailMsg    = 'checked event schedule';
-  this.failedLoginMsg     = 'failed login';
-  this.failedOfferMsg     = 'failed to place offer';
-  this.failedToggleMsg    = 'failed to update invoices';
-  this.foundEventMsg      = 'found event #';
-  this.invalidTokenMsg    = 'invalid token: ';
-  this.invoiceCountMsg    = 'total invoices: ';
-  this.invoicesPageSize   = 40;
-  this.invoiceRetriMsg    = 'starting invoice retrieval...';
-  this.isSecure           = true;
-  this.liveStatus         = 'live';
-  this.networkError       = 'check the login details, host or network';
-  this.newCheckMsg        = 'new check date';
-  this.noDateFilterMsg    = 'date filter cannot accompany event filter, skipping';
-  this.noEventFilterMsg   = 'event filter cannot accompany date filter, skipping';
-  this.offerMsg           = 'placing offer...';
-  this.payThruMsg         = 'pay-thru date';
-  this.preofferStatus     = 'accepting pre-offers';
-  this.sessionGrantMsg    = 'session granted';
-  this.skippingMsg        = ', skipping';
-  this.statusPrefix       = 'status';
-  this.SUPPLIER           = 3;
-  this.successLoginMsg    = 'successful login';
-  this.successOfferMsg    = 'successful offer';
-  this.successToggleMsg   = 'successful invoice update';
-  this.toggleMsg          = 'updating invoices...';
-  this.userDetailsAction  = 'read user details';
-  this.userDetailsMsg     = 'retrieved user details';
+  this.agentString       = 'OCAP shell, v';
+  this.errorBuyerBid     = 'buyers cannot bid in their own events';
+  this.BUYER             = 2;
+  this.errorAmbiguous    = 'ambiguous instruction, skipping';
+  this.errorLiveEventMsg = 'event in progress';
+  this.errorPrefix       = '[error]';
+  this.exitMsg           = "leaving OCAP";
+  this.helpBlurb         = "type 'h' for help";
+  this.helpMsg           = function ( prompt ) { var readme = Util.spitFile( 'help.txt', prompt ); };
+  this.invClearMsg       = 'trashing local copies of invoices...';
+  // "voucher_id","buyer_id","supplier_id","event_id","short_name","name","group_id",
+  // "payment_due_date","amount""invoice_date","is_buyer_included","is_supplier_included"
+  // "status","invoice_id","has_adjustments","is_supplier_excluded","is_unmatched_adjustment",
+  // "is_covering_adjust","is_reserved","is_eligible"
+  this.invColumns        = ['supplier_id', 'payment_due_date', 'amount', 'group_id', 'name'];
+  this.invPrintMsg       = 'printing invoices... ';
+  this.logFile           = 'log/ocap.log';
+  this.logClearMsg       = 'log cleared';
+  this.logWriteMsg       = 'writing log to';
+  this.noEventsMsg       = "no events";
+  this.notFoundMsg       = "command not found type 'h' for help";
+  this.promptPrefix      = 'ocap> ';
+  this.replAddress       = 'localhost';
+  this.replUseMsg        = 'visit via telnet';
+  this.replPort          = 5100;
+  this.replPrompt        = 'ocap repl> ';
+  this.sessionTimeout    = 45; 
+  this.SUPPLIER          = 3;
+  this.title             = '(pollenware OCAP)';
 }

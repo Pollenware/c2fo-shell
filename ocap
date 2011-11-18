@@ -1,29 +1,69 @@
 #!/usr/bin/env node
-var Config       = require( './config/shell.js' ).Config,
-    CommandLine  = require( './lib/commandline.js' ).CommandLine,
-    C2FO         = require( './lib/c2fo.js' ).C2FO,
-    Util         = require( './lib/util.js' ).Util,
-    net          = require( "net" ),
-    repl         = require( "repl" ),
-    version      = '0.0.1';
 
-var cli  = new CommandLine( {
-  defaultPrompt : function () { return Config.promptPrefix; },
+var net          = require( 'net' ),
+    repl         = require( 'repl' ),
+    version      = '0.0.1',
+    Config       = require( './config/ocap.js' ).Config,
+    Library      = require( './lib/ocap/main.js' ).OCAP,
+    DEBUG        = false,
+    Env          = require( './lib/env.js' ).Env,
+    Prompt       = require( './lib/prompt.js' ).Prompt,
+    Shell        = require( './lib/shell.js' ).Shell,
+    Util         = require( './lib/util.js' ).Util;
+
+//
+// load function library
+//
+var library = new Library( Config.agentString + version );
+
+//
+// ready command-line prompt
+//
+var prompt = new Prompt( {
+  default       : function () { return Config.promptPrefix; },
   exitMsg       : Config.exitMsg,
   helpBlurb     : Config.helpBlurb,
   title         : Config.title,
   version       : version
 } );
 
-var c2fo = new C2FO( cli );
+//
+// have prompt return after commands complete
+//
+var postCommandHandler = function ( promptContent, msg ) {
+  if ( msg ) {
+    console.log( msg );
+  }
+  if ( promptContent )  {
+    prompt.content = function () { return promptContent + '> '; };
+  }
+  prompt.show();
+};
 
-c2fo.cli.handleCommand = function ( command ) {
+//
+// supply function for booting system
+//
+var bootupHandler = function ( connectionId, connection ) {
+  library.loginUser( connectionId, connection, postCommandHandler );
+};
+
+//
+// boot shell
+//
+var env = new Env( version, bootupHandler, postCommandHandler );
+library.isDebugging( env.context.debug ); 
+var shell = new Shell( env, prompt, library );
+
+//
+// program shell commands
+//
+shell.prompt.handleCommand = function ( command ) {
 
   //
   // [integer] (connection alias)
   //
   if ( /^\s*\d+\s*$/.test( command ) ) {
-    var connections = c2fo.auth.connections;
+    var connections = shell.env.connections;
     var found = false;
     for ( var c in connections ) {
       var connection = connections[ c ];
@@ -31,13 +71,13 @@ c2fo.cli.handleCommand = function ( command ) {
         found = true; 
         if ( connection.password )
           delete connection.password;
-        c2fo.login(c, Config.sessionTimeout);
+        shell.login(c, Config.sessionTimeout);
         return;
       }
     }
     if ( !found ) {
       console.log( Config.notFoundMsg );
-      c2fo.cli.loop();
+      shell.prompt.show();
     }
   }
 
@@ -45,7 +85,7 @@ c2fo.cli.handleCommand = function ( command ) {
   // <user>@<instance> (connect)
   //
   else if ( /^\s*[A-Za-z0-9\-_]+\@.+[\@A-Za-z0-9\-_]*\s*$/.test( command ) ) {
-    c2fo.login( command, Config.sessionTimeout );
+    shell.login( command, Config.sessionTimeout );
     return;
   }
 
@@ -54,19 +94,19 @@ c2fo.cli.handleCommand = function ( command ) {
   //
   else if ( /^\s*(b|baskets)\s+\d+\s*\d*\s*$/.test( command ) ) {
 
-    if ( !c2fo.auth.hasConnections() ) {
-      c2fo.cli.loop();
+    if ( !shell.env.hasConnections() ) {
+      shell.prompt.show();
       return;
     }
 
     command = command.split(/\s+/);
-    var connectionId = c2fo.auth.connectionString();
+    var connectionId = shell.env.connectionString();
     var eventId      = command[1] && command[1].trim();
     var id           = command[2] && command[2].trim();
     if ( eventId && id ) {
       try {
-        if ( c2fo.auth.connections[connectionId].events[eventId].baskets[id] ) {
-          c2fo.log( c2fo.auth.connections[connectionId].events[eventId].baskets[id] );
+        if ( shell.env.connections[connectionId].events[eventId].baskets[id] ) {
+          shell.log( shell.env.connections[connectionId].events[eventId].baskets[id] );
         }
         else {
           console.log( Config.notFoundMsg );
@@ -74,8 +114,8 @@ c2fo.cli.handleCommand = function ( command ) {
       }
       catch ( err ) {
         try {
-          if ( c2fo.auth.connections[connectionId].events[eventId].event_participations[id] ) {
-            c2fo.log( c2fo.auth.connections[connectionId].events[eventId].event_participations[id] );
+          if ( shell.env.connections[connectionId].events[eventId].event_participations[id] ) {
+            shell.log( shell.env.connections[connectionId].events[eventId].event_participations[id] );
           }
           else {
             console.log( Config.notFoundMsg );
@@ -88,15 +128,15 @@ c2fo.cli.handleCommand = function ( command ) {
     }
     else if ( eventId ) {
       try {
-        if ( c2fo.auth.connections[connectionId].events[eventId].baskets ) {
-          for ( b in c2fo.auth.connections[connectionId].events[eventId].baskets ) {
-            c2fo.log( c2fo.auth.connections[connectionId].events[eventId].baskets[b] );
+        if ( shell.env.connections[connectionId].events[eventId].baskets ) {
+          for ( b in shell.env.connections[connectionId].events[eventId].baskets ) {
+            shell.log( shell.env.connections[connectionId].events[eventId].baskets[b] );
           }
         }
         else {
-          if ( c2fo.auth.connections[connectionId].events[eventId].event_participations ) {
-            for ( e in c2fo.auth.connections[connectionId].events[eventId].event_participations ) {
-              c2fo.log( c2fo.auth.connections[connectionId].events[eventId].event_participations[e] );
+          if ( shell.env.connections[connectionId].events[eventId].event_participations ) {
+            for ( e in shell.env.connections[connectionId].events[eventId].event_participations ) {
+              shell.log( shell.env.connections[connectionId].events[eventId].event_participations[e] );
             }
           }
         }
@@ -112,12 +152,12 @@ c2fo.cli.handleCommand = function ( command ) {
   //
   else if ( /^\s*(c|connections)[ \@a-zA-Z0-9\-_]*$/.test( command ) ) {
  
-    if ( !c2fo.auth.hasConnections() ) {
-      c2fo.cli.loop();
+    if ( !shell.env.hasConnections() ) {
+      shell.prompt.show();
       return;
     }
 
-    var connections  = c2fo.auth.connections;
+    var connections  = shell.env.connections;
     for ( var c in connections ) {
       connections[c] = Util.sanitizeConnection( connections[c] );
     }
@@ -129,13 +169,13 @@ c2fo.cli.handleCommand = function ( command ) {
         for ( var c in connections ) {
           if ( connections[c].id == connectionId ) {
             found = true;
-            c2fo.log( c2fo.auth.connections[c] );
+            shell.log( shell.env.connections[c] );
             break;
           }
         }
       }
       else {
-        c2fo.log( connections[connectionId] );
+        shell.log( connections[connectionId] );
         found = true;
       }
       if ( !found ) {
@@ -144,12 +184,12 @@ c2fo.cli.handleCommand = function ( command ) {
     }
     else if ( /^\s*(c|connections)\s*$/.test( command) ) {
       found = true;
-      c2fo.log( c2fo.auth.listConnections() );
+      shell.log( shell.env.listConnections() );
     }
     if ( !found ) {
       console.log( Config.notFoundMsg );
     }
-    c2fo.cli.loop();
+    shell.prompt.show();
     return;
   }
 
@@ -158,41 +198,44 @@ c2fo.cli.handleCommand = function ( command ) {
   //
   else if ( /^\s*(d|delete)\s+.+$/.test( command ) ) {
 
-    if ( !c2fo.auth.hasConnections() ) {
-      c2fo.cli.loop();
+    if ( !shell.env.hasConnections() ) {
+      shell.prompt.show();
       return;
     }
 
     command = command.split(/\s+/);
+
     var connectionId = command[1].trim();
-    var found     = false;
+
+    var found = false;
+
     if ( /^\d+$/.test( connectionId ) ) {
-      var connections = c2fo.auth.connections;
+      var connections = shell.env.connections;
       for ( var c in connections ) {
         if (connections[c].id == connectionId) {
           found = true;
-          delete c2fo.auth.connections[c];
-          if ( c == c2fo.auth.connectionString() ) {
-            c2fo.cli.prompt = function () { return Config.promptPrefix };
-            c2fo.cli.setPrompt() ;
+          delete shell.env.connections[c];
+          if ( c == shell.env.connectionString() ) {
+            shell.prompt.content = function () { return Config.promptPrefix };
+            shell.prompt.set() ;
           }
         }
       } 
     }
     else {
-      if ( c2fo.auth.connections[connectionId] ) {
+      if ( shell.env.connections[connectionId] ) {
         found = true;
-        delete c2fo.auth.connections[connectionId];
-        if ( c == c2fo.auth.connectionString() ) {
-          c2fo.cli.prompt = function () { return Config.promptPrefix };
-          c2fo.cli.setPrompt() ;
+        delete shell.env.connections[connectionId];
+        if ( c == shell.env.connectionString() ) {
+          shell.prompt.content = function () { return Config.promptPrefix };
+          shell.prompt.set() ;
         }
       }
     }
     if ( !found ) {
       console.log( Config.notFoundMsg );
     }
-    c2fo.cli.loop();
+    shell.prompt.show();
     return;
   }
 
@@ -201,18 +244,18 @@ c2fo.cli.handleCommand = function ( command ) {
   //
   else if ( /^\s*(e|environment)[ a-zA-Z0-9\-_]*$/.test( command ) ) {
 
-    if ( !c2fo.auth.hasConnections() ) {
-      c2fo.cli.loop();
+    if ( !shell.env.hasConnections() ) {
+      shell.prompt.show();
       return;
     }
 
-    var login = c2fo.auth.connectionString();
-    var connection = c2fo.auth.connections[login];
+    var login = shell.env.connectionString();
+    var connection = shell.env.connections[login];
     connection = Util.sanitizeConnection( connection );
     if ( connection && /^\s*(e|environment)\s+[a-zA-Z0-9\-_]+$/.test( command ) ) {
       var c = command.split( /\s+/ );
       var attribute = c[1];
-      c2fo.log( connection[attribute] );
+      shell.log( connection[attribute] );
     }
     else if ( connection && /^\s*(e|environment)\s*$/.test( command ) ) {
       connection = connection || {};
@@ -238,7 +281,7 @@ c2fo.cli.handleCommand = function ( command ) {
           suppressDetail[c] = connection[c];
         }
       }
-      c2fo.log( suppressDetail );
+      shell.log( suppressDetail );
     }
     else {
       console.log( Config.notFoundMsg );
@@ -250,20 +293,20 @@ c2fo.cli.handleCommand = function ( command ) {
   //
   else if ( /^\s*(L|LOCK)\s+\d+\s+\d+\s+\d+\s+[012]\s*$/.test( command ) ) {
 
-    if ( !c2fo.auth.hasConnections() ) {
-      c2fo.cli.loop();
+    if ( !shell.env.hasConnections() ) {
+      shell.prompt.show();
       return;
     }
 
     command = command.split( /\s+/ );
-    var connectionId = c2fo.auth.connectionString();
-    var connection   = c2fo.auth.connections[connectionId];
+    var connectionId = shell.env.connectionString();
+    var connection   = shell.env.connections[connectionId];
     var eventId      = command[1] && command[1].trim();
     var supplierId   = command[2] && command[2].trim();
     var basketId     = command[3] && command[3].trim();
     var statusCode   = command[4] && command[4].trim();
-    c2fo.auth.lockBasket( connectionId, connection, eventId, supplierId, basketId, statusCode );
-    c2fo.cli.loop();
+    shell.commands.lockBasket( connectionId, connection, eventId, supplierId, basketId, statusCode );
+    shell.prompt.show();
     return;
   }
 
@@ -271,7 +314,7 @@ c2fo.cli.handleCommand = function ( command ) {
   // help - h
   //
   else if ( /^\s*(h|help)\s*$/.test( command ) ) {
-    Config.helpMsg( cli );
+    Config.helpMsg( prompt );
     return;
   }
 
@@ -280,8 +323,8 @@ c2fo.cli.handleCommand = function ( command ) {
   //
   else if ( /^\s*(i|invoices)[ =<>a-zA-Z0-9\-\._]*$/.test( command ) ) {
 
-    if ( !c2fo.auth.hasConnections() ) {
-      c2fo.cli.loop();
+    if ( !shell.env.hasConnections() ) {
+      shell.prompt.show();
       return;
     }
 
@@ -291,37 +334,37 @@ c2fo.cli.handleCommand = function ( command ) {
 
       if ( /^\s*(i|invoices)\s+(p|print)\s*$/.test( command ) ) {
         console.log( Config.invPrintMsg );
-        var invoices = c2fo.auth.connections[c2fo.auth.connectionString()].invoices_local;
+        var invoices = shell.env.connections[shell.env.connectionString()].invoices_local;
      
         var header = 'pollenware_invoice_id,';
         for ( var c in Config.invColumns ) {
           header = header + Config.invColumns[c] + ',';
         }
-        c2fo.log( header.replace( /,$/, '' ) );
+        shell.log( header.replace( /,$/, '' ) );
         var row = '';
         for ( var i in invoices ) {
           row = i + ',';
           for ( var c in Config.invColumns ) {
             row = row + invoices[i][Config.invColumns[c]] + ',';
           }
-          c2fo.log( row.replace( /,$/, '' ) );
+          shell.log( row.replace( /,$/, '' ) );
         }
       }
       else if ( /^\s*(i|invoices)\s+(c|clear)\s*$/.test( command ) ) {
         console.log( Config.invClearMsg );
-        c2fo.auth.connections[c2fo.auth.connectionString()].invoices_local = {};
-        delete c2fo.auth.connections[c2fo.auth.connectionString()].invoicePlaceholder;
+        shell.env.connections[shell.env.connectionString()].invoices_local = {};
+        delete shell.env.connections[shell.env.connectionString()].invoicePlaceholder;
       }
       else {
         tokens.shift();
         var query = tokens.join( ' ' );
-        c2fo.auth.getInvoices( c2fo.auth.connectionString(), query );
+        shell.commands.getInvoices( shell.env.connectionString(), query );
       }
     }
 
     // no query
     else if ( /^\s*(i|invoices)\s*$/.test( command ) ) {
-      c2fo.auth.getInvoices( c2fo.auth.connectionString() );
+      shell.commands.getInvoices( shell.env.connectionString() );
     }
 
     else {
@@ -336,7 +379,7 @@ c2fo.cli.handleCommand = function ( command ) {
     var tokens = command.split( /\s+/ );
     tokens.shift();
     var code = tokens.join( ' ' );
-    try { c2fo.log( eval ( code ) ) ; } 
+    try { shell.log( eval ( code ) ) ; } 
     catch ( err ) {
       console.log( err );
     }
@@ -348,9 +391,9 @@ c2fo.cli.handleCommand = function ( command ) {
   else if ( /^\s*(l|log)\s*([c|w]|(clear|write))*$/.test( command ) ) {
     var tokens = command.split( /\s+/ );
     var instruction = tokens[1];
-    var logText = JSON.stringify( c2fo.logData, null, 2 ) + ',';
+    var logText = JSON.stringify( shell.logData, null, 2 ) + ',';
     if ( instruction == 'c' || instruction == 'clear' ) {
-      c2fo.logData = [];
+      shell.logData = [];
       console.log( Config.logClearMsg );
     }
     else if ( instruction == 'w' || instruction == 'write' ) {
@@ -361,7 +404,7 @@ c2fo.cli.handleCommand = function ( command ) {
       }
       catch ( err ) {
         console.log( err );
-        self.cli.loop();
+        self.prompt.show();
       }
     }
     else {
@@ -374,25 +417,25 @@ c2fo.cli.handleCommand = function ( command ) {
   //
   else if ( /^\s*(o|offer)\s+\d+\s+\d+\s+\d+\s*$/.test( command ) ) {
 
-    if ( !c2fo.auth.hasConnections() ) {
-      c2fo.cli.loop();
+    if ( !shell.env.hasConnections() ) {
+      shell.prompt.show();
       return;
     }
 
     command = command.split( /\s+/ );
-    var connectionId = c2fo.auth.connectionString();
-    var connection   = c2fo.auth.connections[connectionId];
+    var connectionId = shell.env.connectionString();
+    var connection   = shell.env.connections[connectionId];
     var eventId      = command[1] && command[1].trim();
     var basket       = command[2] && command[2].trim();
     var bps          = command[3] && command[3].trim();
     if ( !connection.events ) {
       console.log( Config.noEventsMsg );
-      c2fo.cli.loop();
+      shell.prompt.show();
       return;
     }
     else if ( connection.user_type == Config.BUYER ) {
       console.log( Config.errorPrefix + ' - ' + Config.errorBuyerBid );
-      c2fo.cli.loop();
+      shell.prompt.show();
       return;
     }
     else if ( !connection.events[eventId] ) {
@@ -412,11 +455,11 @@ c2fo.cli.handleCommand = function ( command ) {
         if ( found ) {
           thisBasket.offer = bps;
           thisBasket.event = eventId;
-          c2fo.auth.placeOffer( connectionId, thisBasket );
+          shell.commands.placeOffer( connectionId, thisBasket );
         }
         else {
           console.log( Config.notFoundMsg );
-          c2fo.cli.loop();
+          shell.prompt.show();
         }
       }
       else if ( !connection.events[eventId] ) {
@@ -441,13 +484,13 @@ c2fo.cli.handleCommand = function ( command ) {
   //
   else if ( /^\s*(r|repl)\s*$/.test( command ) ) {
     var server = net.createServer( function ( socket ) {
-      c2fo.connections += 1;
-      repl.start( Config.replPrompt, socket, null, false ).context.c2fo = c2fo;
+      shell.replConnections += 1;
+      repl.start( Config.replPrompt, socket, null, false ).context.shell = shell;
     });
     server.listen( Config.replPort || 5100 )
     server.on( 'error', function ( e ) {
       console.log(e);
-      c2fo.cli.loop();
+      shell.prompt.show();
     });
     console.log( Config.replUseMsg + ' ' + Config.replAddress + ' ' + Config.replPort );
   }
@@ -456,20 +499,20 @@ c2fo.cli.handleCommand = function ( command ) {
   // toggle - t
   //
   else if ( /^\s*(t|toggle)\s+[ \d\|ei]+$/i.test( command ) ) {
-    if ( !c2fo.auth.hasConnections() ) {
-      c2fo.cli.loop();
+    if ( !shell.env.hasConnections() ) {
+      shell.prompt.show();
       return;
     }
 
-    var connectionId = c2fo.auth.connectionString();
-    var connection   = c2fo.auth.connections[connectionId];
+    var connectionId = shell.env.connectionString();
+    var connection   = shell.env.connections[connectionId];
 
     if ( connection ) {
 
       for ( var e in connection.events ) {
         if (  connection.events[e].is_live || connection.events[e].is_buyer_live ) {
           console.log( Config.errorLiveEventMsg );
-          c2fo.cli.loop();
+          shell.prompt.show();
           return;
         }
       }
@@ -495,16 +538,16 @@ c2fo.cli.handleCommand = function ( command ) {
           }
           else {
             console.log( Config.notFoundMsg );
-            c2fo.cli.loop();
+            shell.prompt.show();
             return;
           }
         }
       }
-      c2fo.auth.toggleInvoice( connectionId, keep, exclude );
+      shell.commands.toggleInvoice( connectionId, keep, exclude );
     }
     else {
       console.log( Config.notFoundMsg );
-      c2fo.cli.loop();
+      shell.prompt.show();
     }
   }
 
@@ -515,6 +558,6 @@ c2fo.cli.handleCommand = function ( command ) {
     console.log( Config.notFoundMsg );
   }
 
-  c2fo.cli.loop();
+  shell.prompt.show();
 
 };
