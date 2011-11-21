@@ -63,7 +63,7 @@ var shell = new Shell( env, prompt, library );
 library.signinUserCallback = function ( connectionId, pwd, user, instance, response, error ) {
   if ( error ) {
     console.log( Config.errorConnect + ': ' + connectionId );
-    finishHandler( Config.promptPrefix );
+    finishHandler( Config.promptPrefix, error );
     return;
   }
   else {
@@ -569,7 +569,7 @@ shell.prompt.handleCommand = function ( command ) {
           }
         }
       }
-      library.toggleInvoice( connectionId, connection, keep, exclude );
+      library.toggleInvoices( connectionId, connection, keep, exclude );
     }
     else {
       console.log( Config.notFoundMsg );
