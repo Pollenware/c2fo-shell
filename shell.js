@@ -44,12 +44,14 @@ var library = new Library( Config.agentString + version, finishHandler );
 // deal with command-line options and signing in 
 //
 var authHandler = function ( connectionId, pwd ) {
-  library.signinUser( connectionId, pwd );
+  library.auth.signIn( connectionId, pwd );
 };
 var env = new Env( version, authHandler, finishHandler );
-library.isDebugging = env.context.debug;
-library.net.isDebugging = env.context.debug;
 prompt.isDebugging = env.context.debug;
+var libModules = [ 'net', 'auth', 'event', 'invoice' ];
+for (var m in libModules) {
+  library[libModules[m]].isDebugging = env.context.debug;
+}
 
 //
 // start shell
@@ -60,7 +62,7 @@ var shell = new Shell( env, prompt, library );
 // add to shell's connection list after 
 // signin attempt has fully authenticated
 //
-library.signinUserCallback = function ( connectionId, pwd, user, instance, response, error ) {
+library.auth.signInCallback = function ( connectionId, pwd, user, instance, response, error ) {
   if ( error ) {
     console.log( Config.errorConnect + ': ' + connectionId );
     finishHandler( Config.promptPrefix, error );
@@ -79,7 +81,8 @@ library.signinUserCallback = function ( connectionId, pwd, user, instance, respo
       connection.password      = pwd;
       connection.sessionCookie = response.headers['set-cookie'][0];
       connection.user          = user;
-      library.getUserDetails( connectionId, connection );
+      var lookupDetails = function ( connectionId, connection ) { library.auth.getDetails( connectionId, connection ) };
+      var lookupEvents  = function ( connectionId, connection ) { library.event.getDetails( connectionId, connection ) };
     }
     else {
       console.log( Config.errorConnect + ': ' + connectionId );
@@ -369,13 +372,13 @@ shell.prompt.handleCommand = function ( command ) {
       else {
         tokens.shift();
         var query = tokens.join( ' ' );
-        library.getInvoices( connectionId, connection, query );
+        library.invoice.get( connectionId, connection, query );
       }
     }
 
     // no query
     else if ( /^\s*(i|invoices)\s*$/.test( command ) ) {
-      library.getInvoices( connectionId, connection );
+      library.invoice.get( connectionId, connection );
     }
 
     else {
@@ -411,7 +414,7 @@ shell.prompt.handleCommand = function ( command ) {
     var supplierId   = command[2] && command[2].trim();
     var basketId     = command[3] && command[3].trim();
     var statusCode   = command[4] && command[4].trim();
-    library.lockBasket( connectionId, connection, eventId, supplierId, basketId, statusCode );
+    library.event.lockBasket( connectionId, connection, eventId, supplierId, basketId, statusCode );
     shell.prompt.show();
     return;
   }
@@ -484,7 +487,7 @@ shell.prompt.handleCommand = function ( command ) {
         if ( found ) {
           thisBasket.offer = bps;
           thisBasket.event = eventId;
-          library.placeOffer( connectionId, connection, thisBasket );
+          library.event.placeOffer( connectionId, connection, thisBasket );
         }
         else {
           console.log( Config.notFoundMsg );
@@ -569,7 +572,7 @@ shell.prompt.handleCommand = function ( command ) {
           }
         }
       }
-      library.toggleInvoices( connectionId, connection, keep, exclude );
+      library.invoice.toggle( connectionId, connection, keep, exclude );
     }
     else {
       console.log( Config.notFoundMsg );
