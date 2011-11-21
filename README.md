@@ -1,5 +1,19 @@
 ocap-shell - text-based interface to Pollenware optimized collaborative auction platform
 
+# USAGE
+
+    $ ./ocap -h
+    Usage: ocap [options]
+
+    Options:
+
+      -h, --help                      output usage information
+      -V, --version                   output the version number
+      -u, --user  <user name>         user name
+      -i, --instance <instance name>  instance host name
+      -e, --emulating <user name>     user to emulate
+      -d, --debug                     turn on debug messages
+
 # SIGN IN
 
 Signing into the system with authentication credentials can take place either from the system prompt, when booting ocap-shell, or after the shell is up, as a command:
