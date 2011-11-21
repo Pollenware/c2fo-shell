@@ -1,36 +1,32 @@
 #!/usr/bin/env node
 
-var net          = require( 'net' ),
-    repl         = require( 'repl' ),
-    version      = '0.0.1',
-    Config       = require( './config/ocap.js' ).Config,
-    Library      = require( './lib/ocap/main.js' ).OCAP,
-    DEBUG        = false,
-    Env          = require( './lib/env.js' ).Env,
-    Prompt       = require( './lib/prompt.js' ).Prompt,
-    Shell        = require( './lib/shell.js' ).Shell,
-    Util         = require( './lib/util.js' ).Util;
+var net      = require( 'net' ),
+    repl     = require( 'repl' ),
+    version  = '0.0.1',
+    Config   = require( 'config/shell.js' ).Config,
+    DEBUG    = false,
+    Env      = require( 'env.js' ).Env,
+    Prompt   = require( 'prompt.js' ).Prompt,
+    Routines = require( Config.functions ).Routines;
+    Shell    = require( 'shell.js' ).Shell,
+    Util     = require( 'util.js' ).Util;
 
 //
-// load function library
-//
-var library = new Library( Config.agentString + version );
-
-//
-// ready command-line prompt
+// configure command-line prompt
 //
 var prompt = new Prompt( {
-  default       : function () { return Config.promptPrefix; },
-  exitMsg       : Config.exitMsg,
-  helpBlurb     : Config.helpBlurb,
-  title         : Config.title,
-  version       : version
+  default   : function () { return Config.promptPrefix + '> '; },
+  exitMsg   : Config.exitMsg,
+  helpBlurb : Config.helpBlurb,
+  title     : Config.title,
+  version   : version
 } );
 
 //
-// have prompt return after commands complete
+// after executing a routine, present the prompt again;
+// optionally printing a custom message first
 //
-var postCommandHandler = function ( promptContent, msg ) {
+var postRoutineHandler = function ( promptContent, msg ) {
   if ( msg ) {
     console.log( msg );
   }
@@ -40,24 +36,60 @@ var postCommandHandler = function ( promptContent, msg ) {
   prompt.show();
 };
 
-//
-// supply function for booting system
-//
-var bootupHandler = function ( connectionId, connection ) {
-  library.loginUser( connectionId, connection, postCommandHandler );
+var authHandler = function ( connectionId, pwd ) {
+  routines.loginUser( connectionId, pwd );
 };
 
 //
-// boot shell
+// load routines
 //
-var env = new Env( version, bootupHandler, postCommandHandler );
-library.isDebugging( env.context.debug ); 
-var shell = new Shell( env, prompt, library );
+var routines = new Routines( Config.agentString + version, postRoutineHandler );
 
 //
-// program shell commands
+// start shell
 //
+var env = new Env( version, authHandler, postRoutineHandler );
+routines.isDebugging( env.context.debug ); 
+
+var shell = new Shell( env, prompt, routines );
+
+// 
+// add to the shell's connection list only 
+// after each attempt has fully authenticated
+//
+routines.loginUserCallback = function ( connectionId, pwd, user, instance, response, error ) {
+ if ( error ) {
+    console.log( Config.errorConnect + ': ' + connectionId );
+    postRoutineHandler( Config.promptPrefix );
+    return;
+  }
+  else {
+    if ( response ) {
+      console.log( instance + ' - ' + Config.sessionGrantMsg );
+      shell.env.connections[connectionId] = shell.env.connections[connectionId] || {};
+      var connection           = shell.env.connections[connectionId];
+      var payload              = JSON.parse( response.body ).payload;
+      connection.id            = routines.connectionCount++;
+      connection.instance      = instance;
+      connection.lastActive    = new Date( payload.created );
+      connection.lastAction    = Config.successLoginMsg;
+      connection.password      = pwd;
+      connection.sessionCookie = response.headers['set-cookie'][0];
+      connection.user          = user;
+      routines.getUserDetails( connectionId, connection );
+    }
+    else {
+      console.log( Config.errorConnect + ': ' + connectionId );
+      postRoutineHandler( Config.promptPrefix );
+      return;
+    }
+  }
+};
+
 shell.prompt.handleCommand = function ( command ) {
+        
+  var connectionId = shell.env.connectionString();
+  var connection = shell.env.connections[ connectionId ];
 
   //
   // [integer] (connection alias)
@@ -66,12 +98,12 @@ shell.prompt.handleCommand = function ( command ) {
     var connections = shell.env.connections;
     var found = false;
     for ( var c in connections ) {
-      var connection = connections[ c ];
-      if (connection.id == command) {
+      var thisConnection = connections[ c ];
+      if (thisConnection.id == command) {
         found = true; 
-        if ( connection.password )
-          delete connection.password;
-        shell.login(c, Config.sessionTimeout);
+        if ( thisConnection.password )
+          delete thisConnection.password;
+        shell.connect(c, Config.sessionTimeout);
         return;
       }
     }
@@ -85,7 +117,7 @@ shell.prompt.handleCommand = function ( command ) {
   // <user>@<instance> (connect)
   //
   else if ( /^\s*[A-Za-z0-9\-_]+\@.+[\@A-Za-z0-9\-_]*\s*$/.test( command ) ) {
-    shell.login( command, Config.sessionTimeout );
+    shell.connect( command, Config.sessionTimeout );
     return;
   }
 
@@ -100,7 +132,6 @@ shell.prompt.handleCommand = function ( command ) {
     }
 
     command = command.split(/\s+/);
-    var connectionId = shell.env.connectionString();
     var eventId      = command[1] && command[1].trim();
     var id           = command[2] && command[2].trim();
     if ( eventId && id ) {
@@ -164,10 +195,10 @@ shell.prompt.handleCommand = function ( command ) {
     var found     = false;
     if (  /^\s*(c|connections)\s+[\@a-zA-Z0-9\-_]+$/.test( command ) ) {
       var tokens = command.split(/\s+/);
-      var connectionId = tokens[1].trim();
-      if ( /^\d+$/.test( connectionId ) ) {
+      var thisConnectionId = tokens[1].trim();
+      if ( /^\d+$/.test( thisConnectionId ) ) {
         for ( var c in connections ) {
-          if ( connections[c].id == connectionId ) {
+          if ( connections[c].id == thisConnectionId ) {
             found = true;
             shell.log( shell.env.connections[c] );
             break;
@@ -175,7 +206,7 @@ shell.prompt.handleCommand = function ( command ) {
         }
       }
       else {
-        shell.log( connections[connectionId] );
+        shell.log( connections[thisConnectionId] );
         found = true;
       }
       if ( !found ) {
@@ -205,29 +236,29 @@ shell.prompt.handleCommand = function ( command ) {
 
     command = command.split(/\s+/);
 
-    var connectionId = command[1].trim();
+    var thisConnectionId = command[1].trim();
 
     var found = false;
 
-    if ( /^\d+$/.test( connectionId ) ) {
+    if ( /^\d+$/.test( thisConnectionId ) ) {
       var connections = shell.env.connections;
       for ( var c in connections ) {
-        if (connections[c].id == connectionId) {
+        if (connections[c].id == thisConnectionId) {
           found = true;
           delete shell.env.connections[c];
           if ( c == shell.env.connectionString() ) {
-            shell.prompt.content = function () { return Config.promptPrefix };
+            shell.prompt.content = function () { return Config.promptPrefix + '> '};
             shell.prompt.set() ;
           }
         }
       } 
     }
     else {
-      if ( shell.env.connections[connectionId] ) {
+      if ( shell.env.connections[thisConnectionId] ) {
         found = true;
-        delete shell.env.connections[connectionId];
+        delete shell.env.connections[thisConnectionId];
         if ( c == shell.env.connectionString() ) {
-          shell.prompt.content = function () { return Config.promptPrefix };
+          shell.prompt.content = function () { return Config.promptPrefix + '> '};
           shell.prompt.set() ;
         }
       }
@@ -249,36 +280,35 @@ shell.prompt.handleCommand = function ( command ) {
       return;
     }
 
-    var login = shell.env.connectionString();
-    var connection = shell.env.connections[login];
-    connection = Util.sanitizeConnection( connection );
-    if ( connection && /^\s*(e|environment)\s+[a-zA-Z0-9\-_]+$/.test( command ) ) {
+    var sanitizedConnection = Util.sanitizeConnection( connection );
+
+    if ( sanitizedConnection && /^\s*(e|environment)\s+[a-zA-Z0-9\-_]+$/.test( command ) ) {
       var c = command.split( /\s+/ );
       var attribute = c[1];
-      shell.log( connection[attribute] );
+      shell.log( sanitizedConnection[attribute] );
     }
-    else if ( connection && /^\s*(e|environment)\s*$/.test( command ) ) {
-      connection = connection || {};
+    else if ( sanitizedConnection && /^\s*(e|environment)\s*$/.test( command ) ) {
+      sanitiziedConnection = sanitizedConnection || {};
       var suppressDetail      =  {};
       suppressDetail.events   =  [];
       suppressDetail.invoices =  0;
-      for ( c in connection ) {
+      for ( c in sanitizedConnection ) {
         if ( c == 'events' ) {
-          for ( eid in connection['events'] ) {
+          for ( eid in sanitizedConnection['events'] ) {
             suppressDetail.events.push(eid);
           }
         }
         else if ( c == 'invoices_local' ) {
-          var totalInvoices = Object.keys( connection.invoices_local ).length;
+          var totalInvoices = Object.keys( sanitizedConnection.invoices_local ).length;
           suppressDetail.invoices = totalInvoices;
         }
         else if ( c == 'sessionCookie' ) {
-          var cookie = connection.sessionCookie.split( ' ' )[0];
+          var cookie = sanitizedConnection.sessionCookie.split( ' ' )[0];
           cookie = cookie && ( cookie.substr( 0,4 ) + '...' + cookie.substr( -5,5 ) );
           suppressDetail.sessionCookie = cookie;
         }
         else {
-          suppressDetail[c] = connection[c];
+          suppressDetail[c] = sanitizedConnection[c];
         }
       }
       shell.log( suppressDetail );
@@ -286,28 +316,6 @@ shell.prompt.handleCommand = function ( command ) {
     else {
       console.log( Config.notFoundMsg );
     }
-  }
-
-  //
-  // LOCK - L
-  //
-  else if ( /^\s*(L|LOCK)\s+\d+\s+\d+\s+\d+\s+[012]\s*$/.test( command ) ) {
-
-    if ( !shell.env.hasConnections() ) {
-      shell.prompt.show();
-      return;
-    }
-
-    command = command.split( /\s+/ );
-    var connectionId = shell.env.connectionString();
-    var connection   = shell.env.connections[connectionId];
-    var eventId      = command[1] && command[1].trim();
-    var supplierId   = command[2] && command[2].trim();
-    var basketId     = command[3] && command[3].trim();
-    var statusCode   = command[4] && command[4].trim();
-    shell.commands.lockBasket( connectionId, connection, eventId, supplierId, basketId, statusCode );
-    shell.prompt.show();
-    return;
   }
 
   //
@@ -358,13 +366,13 @@ shell.prompt.handleCommand = function ( command ) {
       else {
         tokens.shift();
         var query = tokens.join( ' ' );
-        shell.commands.getInvoices( shell.env.connectionString(), query );
+        routines.getInvoices( connectionId, connection, query );
       }
     }
 
     // no query
     else if ( /^\s*(i|invoices)\s*$/.test( command ) ) {
-      shell.commands.getInvoices( shell.env.connectionString() );
+      routines.getInvoices( connectionId, connection );
     }
 
     else {
@@ -383,6 +391,26 @@ shell.prompt.handleCommand = function ( command ) {
     catch ( err ) {
       console.log( err );
     }
+  }
+
+  //
+  // LOCK - L
+  //
+  else if ( /^\s*(L|LOCK)\s+\d+\s+\d+\s+\d+\s+[012]\s*$/.test( command ) ) {
+
+    if ( !shell.env.hasConnections() ) {
+      shell.prompt.show();
+      return;
+    }
+
+    command = command.split( /\s+/ );
+    var eventId      = command[1] && command[1].trim();
+    var supplierId   = command[2] && command[2].trim();
+    var basketId     = command[3] && command[3].trim();
+    var statusCode   = command[4] && command[4].trim();
+    shell.commands.lockBasket( connectionId, connection, eventId, supplierId, basketId, statusCode );
+    shell.prompt.show();
+    return;
   }
 
   //
@@ -423,8 +451,6 @@ shell.prompt.handleCommand = function ( command ) {
     }
 
     command = command.split( /\s+/ );
-    var connectionId = shell.env.connectionString();
-    var connection   = shell.env.connections[connectionId];
     var eventId      = command[1] && command[1].trim();
     var basket       = command[2] && command[2].trim();
     var bps          = command[3] && command[3].trim();
@@ -503,9 +529,6 @@ shell.prompt.handleCommand = function ( command ) {
       shell.prompt.show();
       return;
     }
-
-    var connectionId = shell.env.connectionString();
-    var connection   = shell.env.connections[connectionId];
 
     if ( connection ) {
 
