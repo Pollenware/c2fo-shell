@@ -22,15 +22,10 @@ var prompt = new Prompt( {
   version   : version
 } );
 
-var authHandler = function ( connectionId, pwd ) {
-  library.loginUser( connectionId, pwd );
-};
-
 //
-// represent prompt after each library call;
-// optionally first displaying a custom message
+// present prompt; optionally first displaying a custom message
 //
-var postLibHandler = function ( promptContent, msg ) {
+var finishHandler = function ( promptContent, msg ) {
   if ( msg ) {
     console.log( msg );
   }
@@ -43,12 +38,15 @@ var postLibHandler = function ( promptContent, msg ) {
 //
 // load external routines the shell can call
 //
-var library = new Library( Config.agentString + version, postLibHandler );
+var library = new Library( Config.agentString + version, finishHandler );
 
 //
 // deal with command-line options and signing in 
 //
-var env = new Env( version, authHandler, postLibHandler );
+var authHandler = function ( connectionId, pwd ) {
+  library.loginUser( connectionId, pwd );
+};
+var env = new Env( version, authHandler, finishHandler );
 library.isDebugging = env.context.debug;
 library.net.isDebugging = env.context.debug;
 prompt.isDebugging = env.context.debug;
@@ -59,13 +57,13 @@ prompt.isDebugging = env.context.debug;
 var shell = new Shell( env, prompt, library );
 
 // 
-// add to shell's connection list only 
-// after login attempt has fully authenticated
+// add to shell's connection list after 
+// login attempt has fully authenticated
 //
 library.loginUserCallback = function ( connectionId, pwd, user, instance, response, error ) {
- if ( error ) {
+  if ( error ) {
     console.log( Config.errorConnect + ': ' + connectionId );
-    postLibHandler( Config.promptPrefix );
+    finishHandler( Config.promptPrefix );
     return;
   }
   else {
@@ -85,7 +83,7 @@ library.loginUserCallback = function ( connectionId, pwd, user, instance, respon
     }
     else {
       console.log( Config.errorConnect + ': ' + connectionId );
-      postLibHandler( Config.promptPrefix );
+      finishHandler( Config.promptPrefix );
       return;
     }
   }
