@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 
-var net      = require( 'net' ),
-    repl     = require( 'repl' ),
-    version  = '0.0.1',
-    Config   = require( 'config/shell.js' ).Config,
-    DEBUG    = false,
+var Config   = require( 'config/shell.js' ).Config,
     Env      = require( 'env.js' ).Env,
+    Library  = require( Config.functions ).Library;
+    net      = require( 'net' ),
     Prompt   = require( 'prompt.js' ).Prompt,
-    Routines = require( Config.functions ).Routines;
+    repl     = require( 'repl' ),
     Shell    = require( 'shell.js' ).Shell,
-    Util     = require( 'util.js' ).Util;
+    Util     = require( 'util.js' ).Util,
+    version  = '0.0.1';
 
 //
 // configure command-line prompt
@@ -23,10 +22,10 @@ var prompt = new Prompt( {
 } );
 
 //
-// after executing a routine, present the prompt again;
-// optionally printing a custom message first
+// represent prompt after executing library calls;
+// optionally print a custom message first
 //
-var postRoutineHandler = function ( promptContent, msg ) {
+var postLibHandler = function ( promptContent, msg ) {
   if ( msg ) {
     console.log( msg );
   }
@@ -36,31 +35,27 @@ var postRoutineHandler = function ( promptContent, msg ) {
   prompt.show();
 };
 
-var authHandler = function ( connectionId, pwd ) {
-  routines.loginUser( connectionId, pwd );
-};
-
 //
-// load routines
+// load library
 //
-var routines = new Routines( Config.agentString + version, postRoutineHandler );
+var library = new Library( Config.agentString + version, postLibHandler );
 
 //
 // start shell
 //
-var env = new Env( version, authHandler, postRoutineHandler );
-routines.isDebugging( env.context.debug ); 
+var env = new Env( version, function (connectionId, pwd ) {library.loginUser( connectionId, pwd )}, postLibHandler );
+library.isDebugging( env.context.debug ); 
 
-var shell = new Shell( env, prompt, routines );
+var shell = new Shell( env, prompt, library );
 
 // 
-// add to the shell's connection list only 
-// after each attempt has fully authenticated
+// add to shell's connection list only 
+// after login attempt has fully authenticated
 //
-routines.loginUserCallback = function ( connectionId, pwd, user, instance, response, error ) {
+library.loginUserCallback = function ( connectionId, pwd, user, instance, response, error ) {
  if ( error ) {
     console.log( Config.errorConnect + ': ' + connectionId );
-    postRoutineHandler( Config.promptPrefix );
+    postLibHandler( Config.promptPrefix );
     return;
   }
   else {
@@ -69,18 +64,18 @@ routines.loginUserCallback = function ( connectionId, pwd, user, instance, respo
       shell.env.connections[connectionId] = shell.env.connections[connectionId] || {};
       var connection           = shell.env.connections[connectionId];
       var payload              = JSON.parse( response.body ).payload;
-      connection.id            = routines.connectionCount++;
+      connection.id            = library.connectionCount++;
       connection.instance      = instance;
       connection.lastActive    = new Date( payload.created );
       connection.lastAction    = Config.successLoginMsg;
       connection.password      = pwd;
       connection.sessionCookie = response.headers['set-cookie'][0];
       connection.user          = user;
-      routines.getUserDetails( connectionId, connection );
+      library.getUserDetails( connectionId, connection );
     }
     else {
       console.log( Config.errorConnect + ': ' + connectionId );
-      postRoutineHandler( Config.promptPrefix );
+      postLibHandler( Config.promptPrefix );
       return;
     }
   }
@@ -131,13 +126,13 @@ shell.prompt.handleCommand = function ( command ) {
       return;
     }
 
-    command = command.split(/\s+/);
-    var eventId      = command[1] && command[1].trim();
-    var id           = command[2] && command[2].trim();
+    command     = command.split(/\s+/);
+    var eventId = command[1] && command[1].trim();
+    var id      = command[2] && command[2].trim();
     if ( eventId && id ) {
       try {
-        if ( shell.env.connections[connectionId].events[eventId].baskets[id] ) {
-          shell.log( shell.env.connections[connectionId].events[eventId].baskets[id] );
+        if ( connection.events[eventId].baskets[id] ) {
+          shell.log( connection.events[eventId].baskets[id] );
         }
         else {
           console.log( Config.notFoundMsg );
@@ -145,8 +140,8 @@ shell.prompt.handleCommand = function ( command ) {
       }
       catch ( err ) {
         try {
-          if ( shell.env.connections[connectionId].events[eventId].event_participations[id] ) {
-            shell.log( shell.env.connections[connectionId].events[eventId].event_participations[id] );
+          if ( connection.events[eventId].event_participations[id] ) {
+            shell.log( connection.events[eventId].event_participations[id] );
           }
           else {
             console.log( Config.notFoundMsg );
@@ -159,15 +154,15 @@ shell.prompt.handleCommand = function ( command ) {
     }
     else if ( eventId ) {
       try {
-        if ( shell.env.connections[connectionId].events[eventId].baskets ) {
-          for ( b in shell.env.connections[connectionId].events[eventId].baskets ) {
-            shell.log( shell.env.connections[connectionId].events[eventId].baskets[b] );
+        if ( connection.events[eventId].baskets ) {
+          for ( b in connection.events[eventId].baskets ) {
+            shell.log( connection.events[eventId].baskets[b] );
           }
         }
         else {
-          if ( shell.env.connections[connectionId].events[eventId].event_participations ) {
-            for ( e in shell.env.connections[connectionId].events[eventId].event_participations ) {
-              shell.log( shell.env.connections[connectionId].events[eventId].event_participations[e] );
+          if ( connection.events[eventId].event_participations ) {
+            for ( e in connection.events[eventId].event_participations ) {
+              shell.log( connection.events[eventId].event_participations[e] );
             }
           }
         }
@@ -366,13 +361,13 @@ shell.prompt.handleCommand = function ( command ) {
       else {
         tokens.shift();
         var query = tokens.join( ' ' );
-        routines.getInvoices( connectionId, connection, query );
+        library.getInvoices( connectionId, connection, query );
       }
     }
 
     // no query
     else if ( /^\s*(i|invoices)\s*$/.test( command ) ) {
-      routines.getInvoices( connectionId, connection );
+      library.getInvoices( connectionId, connection );
     }
 
     else {
@@ -408,7 +403,7 @@ shell.prompt.handleCommand = function ( command ) {
     var supplierId   = command[2] && command[2].trim();
     var basketId     = command[3] && command[3].trim();
     var statusCode   = command[4] && command[4].trim();
-    shell.commands.lockBasket( connectionId, connection, eventId, supplierId, basketId, statusCode );
+    library.lockBasket( connectionId, connection, eventId, supplierId, basketId, statusCode );
     shell.prompt.show();
     return;
   }
@@ -481,7 +476,7 @@ shell.prompt.handleCommand = function ( command ) {
         if ( found ) {
           thisBasket.offer = bps;
           thisBasket.event = eventId;
-          shell.commands.placeOffer( connectionId, thisBasket );
+          library.placeOffer( connectionId, connection, thisBasket );
         }
         else {
           console.log( Config.notFoundMsg );
@@ -566,7 +561,7 @@ shell.prompt.handleCommand = function ( command ) {
           }
         }
       }
-      shell.commands.toggleInvoice( connectionId, keep, exclude );
+      library.toggleInvoice( connectionId, connection, keep, exclude );
     }
     else {
       console.log( Config.notFoundMsg );
