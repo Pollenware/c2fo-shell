@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var Prompt = require( '../lib/prompt.js' ).Prompt;
+var Prompt = require( '../node_modules/prompt.js' ).Prompt;
 
 var prompt  = new Prompt();
 prompt.handleCommand = function ( c ) {
