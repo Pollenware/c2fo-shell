@@ -23,7 +23,8 @@ var prompt = new Prompt( {
 } );
 
 //
-// present prompt; optionally first displaying a custom message
+// specify prompt to surface when every command is finished;
+// optionally printing a message first
 //
 var finishHandler = function ( promptContent, msg ) {
   if ( msg ) {
@@ -36,15 +37,18 @@ var finishHandler = function ( promptContent, msg ) {
 };
 
 //
-// load external routines the shell can call
+// load external routines
 //
 var library = new Library( Config.agentString + version, finishHandler );
 
 //
-// deal with command-line options and signing in 
+// handle command-line options and signing in 
 //
 var authHandler = function ( connectionId, pwd ) {
   library.auth.signIn( connectionId, pwd );
+};
+var errorHandler = function ( error ) {
+  throw error;
 };
 var env = new Env( version, authHandler, finishHandler );
 prompt.isDebugging = env.context.debug;
@@ -59,7 +63,7 @@ for (var m in libModules) {
 var shell = new Shell( env, prompt, library );
 
 // 
-// add to shell's connection list after 
+// add to shell's connection list only after 
 // signin attempt has fully authenticated
 //
 library.auth.signInCallback = function ( connectionId, pwd, user, instance, response, error ) {
@@ -81,8 +85,7 @@ library.auth.signInCallback = function ( connectionId, pwd, user, instance, resp
       connection.password      = pwd;
       connection.sessionCookie = response.headers['set-cookie'][0];
       connection.user          = user;
-      var lookupDetails = function ( connectionId, connection ) { library.auth.getDetails( connectionId, connection ) };
-      var lookupEvents  = function ( connectionId, connection ) { library.event.getDetails( connectionId, connection ) };
+      library.auth.getDetails( connectionId, connection, library.event.getDetails );
     }
     else {
       console.log( Config.errorConnect + ': ' + connectionId );
