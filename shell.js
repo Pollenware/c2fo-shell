@@ -81,8 +81,7 @@ library.auth.signInCallback = function ( connectionId, pwd, user, instance, resp
       connection.password      = pwd;
       connection.sessionCookie = response.headers['set-cookie'][0];
       connection.user          = user;
-      var lookupDetails = function ( connectionId, connection ) { library.auth.getDetails( connectionId, connection ) };
-      var lookupEvents  = function ( connectionId, connection ) { library.event.getDetails( connectionId, connection ) };
+      library.auth.getDetails( connectionId, connection, library.event.getDetails );
     }
     else {
       console.log( Config.errorConnect + ': ' + connectionId );
