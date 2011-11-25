@@ -1,42 +1,49 @@
- <user>@<instance>  (connect)   - connect to OCAP instance   > 3schofid@toysrus-test   
- <user>@<instance>@<emulate>    - connect, emulating         > jon_admin@costco@costco1 (admins)   
--------------------------------------------------------------------------------------------------   
- b <evt>            baskets     - show all baskets           > b 150        
- b <evt> <bk>       baskets     - show basket by id          > b 155 1     
--------------------------------------------------------------------------------------------------    
- c                  connections - show all connections       > c     
- c <cid>            connections - switch to connection by id > c 1   
- c <cname>          connections - switch by name             > c user@instance   
--------------------------------------------------------------------------------------------------   
- d <cid>            delete      - delete connection by id    > d 4    
- d <cname>          delete      - delete connection by name  > d usr@inst  
--------------------------------------------------------------------------------------------------    
- e                  environment - show environment detail    > e 
+--------------------------------------------------------------------------------
+ <user>@<instance>  (connect)   - connect to OCAP instance   > betty@buyer
+ <user>@<instance>@<emulate>    - admin connect, emulating   > jon@buyer@buyer1
+--------------------------------------------------------------------------------
+ b <evt>            baskets     - show all baskets           > b 150
+ b <evt> <bk>       baskets     - show basket by id          > b 155 1
+--------------------------------------------------------------------------------
+ c                  connections - show all connections       > c
+ c <cid>            connections - switch to connection by id > c 1
+ c <cname>          connections - switch by name             > c user@instance
+--------------------------------------------------------------------------------
+ d <cid>            delete      - delete connection by id    > d 4
+ d <cname>          delete      - delete connection by name  > d usr@inst
+--------------------------------------------------------------------------------
+ e                  environment - show environment detail    > e
  e <attr>           environment - show environment attr      > e org_id
--------------------------------------------------------------------------------------------------   
- h                  help        - show this message          > h 
--------------------------------------------------------------------------------------------------   
+--------------------------------------------------------------------------------
+ h                  help        - show this message          > h
+--------------------------------------------------------------------------------
  i                  invoices    - load invoices              > i 
- i <query>          invoices    - load invoices with filter  > i <see examples below>  
-                                                             > i duedate>2012-11-01 amount<20000   
-                                                             > i sortOn=amount event=6518    
-                                                             > i supplier=21 amount=741999.47   
-                                                             > i sortOn=amount event=165     
- i c                inv clear   - erase invoice cache        > i c 
- i p                inv print   - show invoice cache         > i p   
--------------------------------------------------------------------------------------------------   
- j <code>           javascript  - evaluate some code         > j Math.random(5); 
--------------------------------------------------------------------------------------------------   
- l                  log         - show log contents          > l     
- l c                log clear   - clear log> l c   
- l w                log write   - write log to disk          > l w   
--------------------------------------------------------------------------------------------------
- L <evt><sup><bk><st> LOCK      - lock a basket              > L 164 21441850 72446 0   
--------------------------------------------------------------------------------------------------   
- o <evt> <bk> <bps> offer       - submit a discount          > o 169 90940 120   
--------------------------------------------------------------------------------------------------    
- r                  repl        - start TCP REPL server      > r     
--------------------------------------------------------------------------------------------------   
- t <inv> <inv>...   toggle      - include/exclude invoices   > t i24849731 e24855904...     
- t <inv> <inv>...   toggle      - inc/exc by supplier        > t i21440051|24849731... (buyers)
--------------------------------------------------------------------------------------------------
+ i <query>          invoices    - load with filter           > i [see below]
+                                  (filters can be combined)  > i due>2012-11-01
+                                                             > i sortOn=amount 
+                                                             > i amount=741999.47
+                                                             > i supplier=21
+                                                             > i sortOn=amount
+                                                             > i event=165
+ i c                inv clear   - erase invoice cache        > i c
+ i p                inv print   - show invoice cache         > i p
+--------------------------------------------------------------------------------
+ j <code>           javascript  - evaluate some code         > j Math.random(5);
+--------------------------------------------------------------------------------   
+ l                  log         - show log contents          > l
+ l c                log clear   - clear log> l c
+ l w                log write   - write log to disk          > l w
+--------------------------------------------------------------------------------
+ L <e> <s> <b> <s>  LOCK        - lock a basket              > L 164 2144 7446 0
+   event supp basket status 
+--------------------------------------------------------------------------------
+ m <evt>            monitor     - monitor an event           > m 165
+ m <evt> off        monitor     - stop monitoring an event   > m 165 off
+--------------------------------------------------------------------------------
+ o <evt> <bk> <bps> offer       - submit a discount          > o 169 90940 120
+--------------------------------------------------------------------------------
+ r                  repl        - start TCP REPL server      > r
+--------------------------------------------------------------------------------
+ t <inv> <inv>...   toggle      - supplier incl/excl invoices> t i24849 e2854... 
+ t <inv> <inv>...   toggle      - buyer incl/excl invoices   > t i2144|248731... 
+--------------------------------------------------------------------------------
