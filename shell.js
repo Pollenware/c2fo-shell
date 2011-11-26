@@ -474,7 +474,16 @@ shell.prompt.handleCommand = function ( command ) {
         }
       }
       if ( eventFound ) {
-        console.log( MCat.eventFound + ': '  + eventFound );
+        console.log( MCat.eventFound + ': '  + eventFound + ', interval...' );
+        thisEvent = sanitizedConnection.events[eventFound];
+        library.event.getDetails.timerId = setInterval(
+          function () {
+            library.event.getDetails( connectionId, connection);
+            console.log( "\n*** " + thisEvent.event_id );
+          },
+          // MCat.monitorDelay
+          5000
+       );
       }
       else {
         console.log( MCat.errorEventNotFound + ': ' + requestedEvent );

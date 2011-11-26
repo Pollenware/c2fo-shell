@@ -325,6 +325,16 @@ Pre-offers before an event and offers during an event are both supported transpa
 
 ---
 
+# EVENTS
+
+To monitor a scheduled or live event, use the  *m* (*monitor*) command:
+
+## OFFER
+
+    shartleyd787@autoiameri> m 163
+
+---
+
 # LOCKS
 
 Individual basket statuses are edited via disposition locks:
