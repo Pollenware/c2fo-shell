@@ -170,6 +170,7 @@ shell.prompt.handleCommand = function ( command ) {
   //
         
   else { 
+
     var connectionId = shell.env.connectionString();
     var connection = shell.env.connections[ connectionId ];
 
@@ -254,9 +255,6 @@ shell.prompt.handleCommand = function ( command ) {
     else if ( /^\s*(c|connections)[ \@a-zA-Z0-9\-_]*$/.test( command ) ) {
  
       var connections  = shell.env.connections;
-      for ( var c in connections ) {
-        connections[c] = Util.sanitizeConnection( connections[c] );
-      }
       var found     = false;
       if (  /^\s*(c|connections)\s+[\@a-zA-Z0-9\-_]+$/.test( command ) ) {
         var tokens = command.split(/\s+/);
@@ -478,10 +476,15 @@ shell.prompt.handleCommand = function ( command ) {
       var turnOff = c[2] && c[2].trim();
 
       if ( turnOff == 'off' ) {
-        if ( env.context.debug )
-          console.info( MCat.monitorOffMsg + ' '  + requestedEvent );
-        clearInterval( library.event.timers[requestedEvent] );
-        delete library.event.timers[requestedEvent];
+        if ( library.event.timers[requestedEvent] ) {
+          if ( env.context.debug )
+            console.info( MCat.monitorOffMsg + ' '  + requestedEvent );
+          clearInterval( library.event.timers[requestedEvent] );
+          delete library.event.timers[requestedEvent];
+        }
+        else {
+          console.error( MCat.errorEventNotFound + ': '  + requestedEvent );
+        }
       }
       else {
         if ( library.event.timers[requestedEvent] ) {
@@ -506,7 +509,13 @@ shell.prompt.handleCommand = function ( command ) {
               thisEvent = sanitizedConnection.events[eventFound];
               var monitorEvent = function () {
                   library.event.getDetails( connectionId, connection);
-                  console.log( "\n" + thisEvent.is_live + ' ' + thisEvent.is_buyer_live + ' ' + thisEvent.cash_pool );
+                  var monitorMsg = MCat.monitorSchedMsg;
+                  if ( thisEvent.is_live )
+                    monitorMsg = MCat.monitorLiveMsg;
+                  if ( thisEvent.is_buyer_live ) 
+                    monitorMsg = MCat.monitorBliveMsg;
+                  
+                  console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' ' + eventFound + ': ' + thisEvent.cash_pool );
               };
               monitorEvent();
               library.event.timers[eventFound] = setInterval(

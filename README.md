@@ -46,8 +46,7 @@ Signing into the system with authentication credentials can take place either fr
     ocap> c2foUsername@c2foInstance
     Password: **********
     connecting...
-    c2foInstance - session granted
-    [...]
+    c2foUsername@c2foInstance> 
 
 ---
 
