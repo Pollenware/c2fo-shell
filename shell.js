@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var MCat   = require( 'message-catalog/shell.js' ).MCat,
-    Env      = require( 'ocap/env' ).Env,
+    Env      = require( 'ocap/env.js' ).Env,
     Library  = require( MCat.functions ).Library;
     net      = require( 'net' ),
     Prompt   = require( 'prompt.js' ).Prompt,
@@ -68,14 +68,14 @@ var shell = new Shell( env, prompt, library );
 //
 library.auth.signInCallback = function ( connectionId, pwd, user, instance, response, error ) {
   if ( error ) {
-    console.log( MCat.errorConnect + ': ' + connectionId );
+    console.error( MCat.errorConnect + ': ' + connectionId );
     finishHandler( MCat.promptPrefix, error );
     return;
   }
   else {
     if ( response ) {
       if ( library.auth.isDebugging ) { 
-        console.log( MCat.debugPrefix + ' - ' + instance + ' - ' + MCat.sessionGrantMsg );
+        console.info( MCat.debugPrefix + ' - ' + instance + ' - ' + MCat.sessionGrantMsg );
       }
       shell.env.connections[connectionId] = shell.env.connections[connectionId] || {};
       var connection           = shell.env.connections[connectionId];
@@ -90,7 +90,7 @@ library.auth.signInCallback = function ( connectionId, pwd, user, instance, resp
       library.auth.getDetails( connectionId, connection, library.event.getDetails );
     }
     else {
-      console.log( MCat.errorConnect + ': ' + connectionId );
+      console.error( MCat.errorConnect + ': ' + connectionId );
       finishHandler( MCat.promptPrefix );
       return;
     }
@@ -119,7 +119,7 @@ shell.prompt.handleCommand = function ( command ) {
       }
     }
     if ( !found ) {
-      console.log( MCat.notFoundMsg );
+      console.error( MCat.notFoundMsg );
       shell.prompt.show();
     }
   }
@@ -151,7 +151,7 @@ shell.prompt.handleCommand = function ( command ) {
           shell.log( connection.events[eventId].baskets[id] );
         }
         else {
-          console.log( MCat.notFoundMsg );
+          console.error( MCat.notFoundMsg );
         }
       }
       catch ( err ) {
@@ -160,11 +160,11 @@ shell.prompt.handleCommand = function ( command ) {
             shell.log( connection.events[eventId].event_participations[id] );
           }
           else {
-            console.log( MCat.notFoundMsg );
+            console.error( MCat.notFoundMsg );
           }
         }
         catch ( err ) {
-          console.log( MCat.notFoundMsg );
+          console.error( MCat.notFoundMsg );
         }
       }
     }
@@ -175,16 +175,17 @@ shell.prompt.handleCommand = function ( command ) {
             shell.log( connection.events[eventId].baskets[b] );
           }
         }
-        else {
-          if ( connection.events[eventId].event_participations ) {
-            for ( e in connection.events[eventId].event_participations ) {
-              shell.log( connection.events[eventId].event_participations[e] );
-            }
+        else if ( connection.events[eventId].event_participations ) {
+          for ( e in connection.events[eventId].event_participations ) {
+            shell.log( connection.events[eventId].event_participations[e] );
           }
+        }
+        else {
+          console.error( MCat.noBasketsMsg );
         }
       }
       catch ( err ) {
-        console.log( MCat.notFoundMsg );
+        console.error( MCat.notFoundMsg );
       }
     }
   }
@@ -221,7 +222,7 @@ shell.prompt.handleCommand = function ( command ) {
         found = true;
       }
       if ( !found ) {
-        console.log( MCat.notFoundMsg );
+        console.error( MCat.notFoundMsg );
       }
     }
     else if ( /^\s*(c|connections)\s*$/.test( command) ) {
@@ -229,7 +230,7 @@ shell.prompt.handleCommand = function ( command ) {
       shell.log( shell.env.listConnections() );
     }
     if ( !found ) {
-      console.log( MCat.notFoundMsg );
+      console.error( MCat.notFoundMsg );
     }
     shell.prompt.show();
     return;
@@ -275,7 +276,7 @@ shell.prompt.handleCommand = function ( command ) {
       }
     }
     if ( !found ) {
-      console.log( MCat.notFoundMsg );
+      console.error( MCat.notFoundMsg );
     }
     shell.prompt.show();
     return;
@@ -325,7 +326,7 @@ shell.prompt.handleCommand = function ( command ) {
       shell.log( suppressDetail );
     }
     else {
-      console.log( MCat.notFoundMsg );
+      console.error( MCat.notFoundMsg );
     }
   }
 
@@ -352,7 +353,8 @@ shell.prompt.handleCommand = function ( command ) {
       var tokens = command.split( /\s+/ );
 
       if ( /^\s*(i|invoices)\s+(p|print)\s*$/.test( command ) ) {
-        console.log( MCat.invPrintMsg );
+        if ( env.context.debug )
+          console.info( MCat.debugPrefix + ' - ' + MCat.invPrintMsg );
         var invoices = shell.env.connections[shell.env.connectionString()].invoices_local;
      
         var header = 'pollenware_invoice_id,';
@@ -370,7 +372,8 @@ shell.prompt.handleCommand = function ( command ) {
         }
       }
       else if ( /^\s*(i|invoices)\s+(c|clear)\s*$/.test( command ) ) {
-        console.log( MCat.invClearMsg );
+        if ( env.context.debug )
+          console.info( MCat.debugPrefix + ' - ' + MCat.invClearMsg );
         shell.env.connections[shell.env.connectionString()].invoices_local = {};
         delete shell.env.connections[shell.env.connectionString()].invoicePlaceholder;
       }
@@ -387,7 +390,7 @@ shell.prompt.handleCommand = function ( command ) {
     }
 
     else {
-      console.log( MCat.notFoundMsg );
+      console.error( MCat.notFoundMsg );
     }
   }
 
@@ -400,7 +403,7 @@ shell.prompt.handleCommand = function ( command ) {
     var code = tokens.join( ' ' );
     try { shell.log( eval ( code ) ) ; } 
     catch ( err ) {
-      console.log( err );
+      console.error( err );
     }
   }
 
@@ -433,16 +436,18 @@ shell.prompt.handleCommand = function ( command ) {
     var logText = JSON.stringify( shell.logData, null, 2 ) + ',';
     if ( instruction == 'c' || instruction == 'clear' ) {
       shell.logData = [];
-      console.log( MCat.logClearMsg );
+      if ( env.context.debug )
+        console.info( MCat.logClearMsg );
     }
     else if ( instruction == 'w' || instruction == 'write' ) {
       var logFile = MCat.logFile || ( process.argv[1].split( '/' ).pop() + '.log' );
-      console.log( MCat.logWriteMsg + ' ' + logFile + '...' );
+      if ( env.context.debug )
+        console.info( MCat.logWriteMsg + ' ' + logFile + '...' );
       try {
         Util.appendFile( logFile,  logText );
       }
       catch ( err ) {
-        console.log( err );
+        console.error( err );
         self.prompt.show();
       }
     }
@@ -454,43 +459,62 @@ shell.prompt.handleCommand = function ( command ) {
   //
   // monitor - m 
   //
-  else if ( /^\s*(m|monitor)\s+[0-9]+\s*$/.test( command ) ) {
+  else if ( /^\s*(m|monitor)\s*[0-9]+\s*(off)*$/.test( command ) ) {
 
     if ( !shell.env.hasConnections() ) {
       shell.prompt.show();
       return;
     }
 
-    var sanitizedConnection = Util.sanitizeConnection( connection );
+    var c = command.split( /\s+/ );
+    var requestedEvent = c[1].trim();
+    var turnOff = c[2] && c[2].trim();
 
-    if ( sanitizedConnection && sanitizedConnection.events) {
-      var c = command.split( /\s+/ );
-      var requestedEvent = c[1];
-      var eventFound = 0;
-      console.log( 'Searching for event ' + requestedEvent + '...' );
-      for ( var e in sanitizedConnection.events ) {
-        if ( requestedEvent == e ) {
-          eventFound = e
-        }
-      }
-      if ( eventFound ) {
-        console.log( MCat.eventFound + ': '  + eventFound + ', interval...' );
-        thisEvent = sanitizedConnection.events[eventFound];
-        library.event.getDetails.timerId = setInterval(
-          function () {
-            library.event.getDetails( connectionId, connection);
-            console.log( "\n*** " + thisEvent.event_id );
-          },
-          // MCat.monitorDelay
-          5000
-       );
-      }
-      else {
-        console.log( MCat.errorEventNotFound + ': ' + requestedEvent );
-      }
+    if ( turnOff == 'off' ) {
+      if ( env.context.debug )
+        console.info( MCat.monitorOffMsg + ' '  + requestedEvent );
+      clearInterval( library.event.timers[requestedEvent] );
+      delete library.event.timers[requestedEvent];
     }
     else {
-      console.log('No events!');
+      if ( library.event.timers[requestedEvent] ) {
+        if ( env.context.debug )
+          console.info( requestedEvent + ' ' + MCat.nowMonitoredMsg );
+      }
+      else {
+        var sanitizedConnection = Util.sanitizeConnection( connection );
+
+        if ( sanitizedConnection && sanitizedConnection.events) {
+          var eventFound = 0;
+          if ( env.context.debug )
+            console.info( MCat.monitorSearchMsg + requestedEvent + '...' );
+          for ( var e in sanitizedConnection.events ) {
+            if ( requestedEvent == e ) {
+              eventFound = e
+            }
+          }
+          if ( eventFound ) {
+            if ( env.context.debug )
+              console.info( MCat.monitorOnMsg + ' '  + eventFound );
+            thisEvent = sanitizedConnection.events[eventFound];
+            var monitorEvent = function () {
+                library.event.getDetails( connectionId, connection);
+                console.log( "\n" + thisEvent.is_live + ' ' + thisEvent.is_buyer_live + ' ' + thisEvent.cash_pool );
+            };
+            monitorEvent();
+            library.event.timers[eventFound] = setInterval(
+              monitorEvent,
+              MCat.monitorDelay
+           );
+          }
+          else {
+            console.error( MCat.errorEventNotFound + ': ' + requestedEvent );
+          }
+        }
+        else {
+          console.error( MCat.noEventsMsg );
+        }
+      }
     }
     shell.prompt.show();
   }
@@ -510,17 +534,17 @@ shell.prompt.handleCommand = function ( command ) {
     var basket       = command[2] && command[2].trim();
     var bps          = command[3] && command[3].trim();
     if ( !connection.events ) {
-      console.log( MCat.noEventsMsg );
+      console.error( MCat.noEventsMsg );
       shell.prompt.show();
       return;
     }
     else if ( connection.user_type == MCat.BUYER ) {
-      console.log( MCat.errorPrefix + ' - ' + MCat.errorBuyerBid );
+      console.error( MCat.errorPrefix + ' - ' + MCat.errorBuyerBid );
       shell.prompt.show();
       return;
     }
     else if ( !connection.events[eventId] ) {
-      console.log( MCat.notFoundMsg );
+      console.error( MCat.notFoundMsg );
     }
     else if ( eventId && basket && bps ) {
       if ( connection.events[eventId] ) {
@@ -539,16 +563,16 @@ shell.prompt.handleCommand = function ( command ) {
           library.event.placeOffer( connectionId, connection, thisBasket );
         }
         else {
-          console.log( MCat.notFoundMsg );
+          console.error( MCat.notFoundMsg );
           shell.prompt.show();
         }
       }
       else if ( !connection.events[eventId] ) {
-        console.log( MCat.notFoundMsg );
+        console.error( MCat.notFoundMsg );
       }
     }
     else {
-      console.log( MCat.notFoundMsg );
+      console.error( MCat.notFoundMsg );
     }
   }
 
@@ -556,7 +580,8 @@ shell.prompt.handleCommand = function ( command ) {
   // quit - q
   //
   else if ( /^\s*(q|quit)\s*$/.test( command ) ) {
-    console.log( MCat.exitMsg );
+    if ( env.context.debug ) 
+      console.info( MCat.exitMsg );
     process.exit( 0 );
   }
 
@@ -570,7 +595,7 @@ shell.prompt.handleCommand = function ( command ) {
     });
     server.listen( MCat.replPort || 5100 )
     server.on( 'error', function ( e ) {
-      console.log(e);
+      console.error( e );
       shell.prompt.show();
     });
     console.log( MCat.replUseMsg + ' ' + MCat.replAddress + ' ' + MCat.replPort );
@@ -589,7 +614,7 @@ shell.prompt.handleCommand = function ( command ) {
 
       for ( var e in connection.events ) {
         if (  connection.events[e].is_live || connection.events[e].is_buyer_live ) {
-          console.log( MCat.errorLiveEventMsg );
+          console.error( MCat.errorLiveEventMsg );
           shell.prompt.show();
           return;
         }
@@ -602,7 +627,7 @@ shell.prompt.handleCommand = function ( command ) {
       for ( var i in invoiceIds ) {
         var iId = invoiceIds[i];
         if (! /^[ieEI][\|\d]+$/.test( iId ) ) {
-          console.log( MCat.errorAmbiguous + ': ' + iId );
+          console.error( MCat.errorAmbiguous + ': ' + iId );
           continue;
         }
         else {
@@ -615,7 +640,7 @@ shell.prompt.handleCommand = function ( command ) {
             exclude.push( iId );
           }
           else {
-            console.log( MCat.notFoundMsg );
+            console.error( MCat.notFoundMsg );
             shell.prompt.show();
             return;
           }
@@ -624,7 +649,7 @@ shell.prompt.handleCommand = function ( command ) {
       library.invoice.toggle( connectionId, connection, keep, exclude );
     }
     else {
-      console.log( MCat.notFoundMsg );
+      console.error( MCat.notFoundMsg );
       shell.prompt.show();
     }
   }
@@ -633,7 +658,7 @@ shell.prompt.handleCommand = function ( command ) {
   // unrecognized command
   //
   else {
-    console.log( MCat.notFoundMsg );
+    console.error( MCat.notFoundMsg );
   }
 
   shell.prompt.show();
