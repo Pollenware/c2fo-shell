@@ -509,13 +509,15 @@ shell.prompt.handleCommand = function ( command ) {
               thisEvent = sanitizedConnection.events[eventFound];
               var monitorEvent = function () {
                   library.event.getDetails( connectionId, connection);
-                  var monitorMsg = MCat.monitorSchedMsg;
-                  if ( thisEvent.is_live )
+                  var monitorMsg;
+                  if ( thisEvent.is_active && thisEvent.is_live ) 
                     monitorMsg = MCat.monitorLiveMsg;
-                  if ( thisEvent.is_buyer_live ) 
+                  else if ( thisEvent.is_active && thisEvent.is_buyer_live ) 
                     monitorMsg = MCat.monitorBliveMsg;
+                  else
+                    monitorMsg = MCat.monitorSchedMsg;
                   
-                  console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' ' + eventFound + ': ' + thisEvent.cash_pool );
+                  console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ': ' + thisEvent.cash_pool );
               };
               monitorEvent();
               library.event.timers[eventFound] = setInterval(
