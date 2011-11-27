@@ -33,18 +33,9 @@ Signing into the system with authentication credentials can take place either fr
 
 ### SUCCEED
 
-    $ ./ocap -u c2foUsername -i c2foInstance
+    $ ./ocap -u c2foUsername -i c2foInstance -d
     Password: ***********
     connecting...
-    c2foInstance - session granted
-    c2foInstance - retrieved user details
-    c2foInstance - undefined
-    c2foInstance - found event #23
-    c2foInstance - #23: countdown to go-live: 1d17h58m55s
-    c2foInstance - #23: duration: 0d0h30m0s
-    c2foInstance - #23: new check date: 2011-11-17T00:00:00Z
-    c2foInstance - #23: pay-thru date: 2011-11-17T00:00:00Z
-    c2foInstance - #23: status: accepting pre-offers
     c2foUsername@c2foInstance> 
 
 ## WITHIN OCAP CLI
@@ -199,15 +190,11 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
     shartleyd787@autoiameri> i
     starting invoice retrieval...
     shartleyd787@autoiameri> 
-    autoiameri - total invoices: 40
-    autoiameri - invoices retrieved
     shartleyd787@autoiameri> j Object.keys(c2fo.auth.connections[c2fo.auth.connectionString()].invoices_local).length 
     40
     shartleyd787@autoiameri> i
     starting invoice retrieval...
-    shartleyd787@autoiameri> 
-    autoiameri - total invoices: 40
-    autoiameri - invoices retrieved
+    autoiameri - total invoices retrieved: 40
     shartleyd787@autoiameri> j Object.keys(c2fo.auth.connections[c2fo.auth.connectionString()].invoices_local).length 
     80 
 
@@ -215,7 +202,7 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
 
 ### BY DUE DATE
 
-    shartleyd787@autoiameri> i duedate>2012-11-01
+    shartleyd787@autoiameri> i due>2012-11-01
     [...]
  
 ### BY AMOUNT
@@ -230,18 +217,17 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
  
 ### SPECIFY SORT ORDER OF RETIEVED PAGE
 
-    shartleyd787@autoiameri> i duedate>2012-11-01 sortOn=amount
+    shartleyd787@autoiameri> i due>2012-11-01 sortOn=amount
     [...]
  
 ### MIX & MATCH AS DESIRED...
 
-    shartleyd787@autoiameri> i duedate=2012-11-01 amount<211000 sortOn=amount
+    shartleyd787@autoiameri> i due=2012-11-01 amount<211000 sortOn=amount
     [...]
  
 ## PRINT 
 
     shartleyd787@autoiameri> i p
-    printing invoices...
     pollenware_invoice_id,supplier_id,payment_due_date,amount,group_id,name
     8594105,31553828,2011-09-04,319.2,,Simeon Hartley D Enterp
     8596112,31554286,2011-09-08,108256.56,,Simeon Hartley D Enterp
@@ -252,7 +238,6 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
 ## CLEAR
 
     shartleyd787@autoiameri> i c
-    trashing local copies of invoices...
     shartleyd787@autoiameri> j Object.keys(c2fo.auth.connections[c2fo.auth.connectionString()].invoices_local).length
     0
     shartleyd787@autoiameri>
@@ -260,16 +245,13 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
 ## INCLUDE/EXCLUDE AS SUPPLIER
 
     shartleyd787@autoiameri> t e127689 e128881 i129221...
-    updating invoices...
-    shartleyd787@autoiameri> autoiameri - successful invoice update
     autoiameri - invoices updated
     shartleyd787@autoiameri> 
 
 ## INCLUDE/EXCLUDE AS BUYER
 
     autoiameri1@autoiameri> t e3155500|127689 e3155689|128881...
-    updating invoices...
-    autoiameri1@autoiameri> autoiameri - successful invoice update
+    autoiameri1@autoiameri> 
     autoiameri - invoices updated
     autoiameri1@autoiameri> 
 
@@ -318,8 +300,6 @@ Pre-offers before an event and offers during an event are both supported transpa
       "supplier_id": 31551276,
     [..]
     shartleyd787@autoiameri> o 163 66929 120
-    placing offer...
-    shartleyd787@autoiameri> autoiameri - successful offer
     autoiameri - offer placed
     shartleyd787@autoiameri> 
 
@@ -329,9 +309,15 @@ Pre-offers before an event and offers during an event are both supported transpa
 
 To monitor a scheduled or live event, use the  *m* (*monitor*) command:
 
-## OFFER
+## MONITOR AN EVENT
 
     shartleyd787@autoiameri> m 163
+    [...]
+
+## STOP MONITORING AN EVENT
+
+    shartleyd787@autoiameri> m 163 off
+    shartleyd787@autoiameri>
 
 ---
 
