@@ -508,7 +508,12 @@ shell.prompt.handleCommand = function ( command ) {
                 console.info( MCat.monitorOnMsg + ' '  + eventFound );
               thisEvent = sanitizedConnection.events[eventFound];
               var monitorEvent = function () {
-                  library.event.getDetails( connectionId, connection);
+                  library.event.getDetails( connectionId, connection, function ( promptContent, msg ) {
+                    if ( msg ) {
+                      console.log( msg );
+                    }
+                    prompt.show();
+                  } );
                   var monitorMsg;
                   if ( thisEvent.is_active && thisEvent.is_live ) 
                     monitorMsg = MCat.monitorLiveMsg;
