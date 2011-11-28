@@ -506,23 +506,22 @@ shell.prompt.handleCommand = function ( command ) {
             if ( eventFound ) {
               if ( env.context.debug )
                 console.info( MCat.monitorOnMsg + ' '  + eventFound );
-              thisEvent = sanitizedConnection.events[eventFound];
-              var monitorEvent = function () {
-                  library.event.getDetails( connectionId, connection, function ( promptContent, msg ) {
-                    if ( msg ) {
-                      console.log( msg );
-                    }
-                    prompt.show();
-                  } );
-                  var monitorMsg;
-                  if ( thisEvent.is_active && thisEvent.is_live ) 
-                    monitorMsg = MCat.monitorLiveMsg;
-                  else if ( thisEvent.is_active && thisEvent.is_buyer_live ) 
-                    monitorMsg = MCat.monitorBliveMsg;
-                  else
-                    monitorMsg = MCat.monitorSchedMsg;
+              var monitorEvent = function () {                      // finishHandler override
+                library.event.getDetails( connectionId, connection, function ( promptContent, msg ) {
+                  if ( msg )
+                    console.log( msg );
+                  prompt.show();
+                } );
+                var monitorMsg;
+                thisEvent = connection.events[eventFound];
+                if ( thisEvent.is_active && thisEvent.is_live ) 
+                  monitorMsg = MCat.monitorLiveMsg;
+                else if ( thisEvent.is_active && thisEvent.is_buyer_live ) 
+                  monitorMsg = MCat.monitorBliveMsg;
+                else
+                  monitorMsg = MCat.monitorSchedMsg;
                   
-                  console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ': ' + thisEvent.cash_pool );
+                console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ': ' + thisEvent.cash_pool );
               };
               monitorEvent();
               library.event.timers[eventFound] = setInterval(
