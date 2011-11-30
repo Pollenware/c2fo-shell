@@ -476,18 +476,18 @@ shell.prompt.handleCommand = function ( command ) {
       var turnOff = c[2] && c[2].trim();
 
       if ( turnOff == 'off' ) {
-        if ( library.event.timers[requestedEvent] ) {
+        if ( library.event.timers[connection.instance] && library.event.timers[connection.instance][requestedEvent] ) {
           if ( env.context.debug )
             console.info( MCat.monitorOffMsg + ' '  + requestedEvent );
-          clearInterval( library.event.timers[requestedEvent] );
-          delete library.event.timers[requestedEvent];
+          clearInterval( library.event.timers[connection.instance][requestedEvent] );
+          delete library.event.timers[connection.instance][requestedEvent];
         }
         else {
           console.error( MCat.errorEventNotFound + ': '  + requestedEvent );
         }
       }
       else {
-        if ( library.event.timers[requestedEvent] ) {
+        if ( library.event.timers[connection.instance] && library.event.timers[connection.instance][requestedEvent] ) {
           if ( env.context.debug )
             console.info( requestedEvent + ' ' + MCat.nowMonitoredMsg );
         }
@@ -524,7 +524,8 @@ shell.prompt.handleCommand = function ( command ) {
                 console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ': ' + thisEvent.cash_pool );
               };
               monitorEvent();
-              library.event.timers[eventFound] = setInterval(
+              library.event.timers[connection.instance] = library.event.timers[connection.instance] || {};
+              library.event.timers[connection.instance][eventFound] = setInterval(
                 monitorEvent,
                 MCat.monitorDelay
              );

@@ -182,7 +182,7 @@ Relevant baskets within an event can also be displayed:
 
 # INVOICES
 
-Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_ is defined as the number of records configured in `config/ocap.js/Config.invoicesPageSize`.  ocap-shell keeps track of the pagination and will pull down new invoices with every call until there are no more to retrieve.  Once the ocap-shell user has locally downloaded the invoice set she needs, they can be printed, logged, or otherwise manipulated:
+Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_ is defined as the number of records configured in `message-catalog/ocap/invoice.js/MCat.invoicesPageSize`.  ocap-shell keeps track of the pagination and will pull down new invoices with every call until there are no more to retrieve.  Once the ocap-shell user has locally downloaded the invoice set she needs, they can be printed, logged, or otherwise manipulated:
 
 ## DOWNLOAD 1 PAGE
 
