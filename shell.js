@@ -514,14 +514,20 @@ shell.prompt.handleCommand = function ( command ) {
                 } );
                 var monitorMsg;
                 thisEvent = connection.events[eventFound];
-                if ( thisEvent.is_active && thisEvent.is_live ) 
-                  monitorMsg = MCat.monitorLiveMsg;
-                else if ( thisEvent.is_active && thisEvent.is_buyer_live ) 
-                  monitorMsg = MCat.monitorBliveMsg;
-                else
-                  monitorMsg = MCat.monitorSchedMsg;
-                  
-                console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ': ' + thisEvent.cash_pool );
+                if ( thisEvent ) {
+                  if ( thisEvent.is_active && thisEvent.is_live ) 
+                    monitorMsg = MCat.monitorLiveMsg;
+                  else if ( thisEvent.is_active && thisEvent.is_buyer_live ) 
+                    monitorMsg = MCat.monitorBliveMsg;
+                  else
+                    monitorMsg = MCat.monitorSchedMsg;
+                  console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ': ' + thisEvent.cash_pool );
+                }
+                else {
+                  clearInterval( library.event.timers[connection.instance][eventFound] );
+                  delete library.event.timers[connection.instance][eventFound];
+                  console.log( "\n" + connection.instance + ' - ' + MCat.eventOver + ': #' + eventFound );
+                }
               };
               monitorEvent();
               library.event.timers[connection.instance] = library.event.timers[connection.instance] || {};
