@@ -529,7 +529,7 @@ shell.prompt.handleCommand = function ( command ) {
                        var basket = thisEvent.event_participations[b];
                        if ( basket.pre_bid_amount > 0 )
                          console.log( connection.instance + ' - ' + basket.title + ' ' + MCat.eventPreLabel + ': ' + basket.pre_bid_amount );
-                       if ( basket.bid_amount && basket.bid_status && basket.bid_amount > 0 )
+                       if ( basket.bid_amount && basket.bid_amount > 0 )
                          console.log( connection.instance + ' - ' + basket.title + ' ' + MCat.eventOfferLabel + ': ' + basket.bid_amount + 
                            ' ' + MCat.eventStatusLabel + ': ' + MCat.eventStatuses[basket.bid_status] );
                     }

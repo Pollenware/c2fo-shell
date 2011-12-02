@@ -104,7 +104,6 @@ Once successfully connected to an OCAP instance, the environment can be displaye
         "163"
       ],
       "invoices": 0,
-      "user": "pete_admin",
       "instance": "autoiameri",
       "sessionCookie": "%2B0...cf37;",
       "id": 6,
@@ -311,7 +310,33 @@ To monitor a scheduled or live event, use the  *m* (*monitor*) command:
 ## MONITOR AN EVENT
 
     shartleyd787@autoiameri> m 163
-    [...]
+    autoiameri - scheduled event #163
+    autoiameri - 1-10 Days pre-offer: 0.2
+    autoiameri - 11-30 Days pre-offer: 0.31
+    autoiameri - 31-45 Days pre-offer: 0.4
+    shartleyd787@autoiameri> 
+    autoiameri - live event #163
+    autoiameri - 1-10 Days offer: 0.2 status: GREEN
+    autoiameri - 11-30 Days offer: 0.31 status: RED
+    autoiameri - 31-45 Days offer: 0.4 status: RED
+    shartleyd787@autoiameri> 
+    autoiameri - awaiting buyer decision event #163
+    autoiameri - 1-10 Days offer: 0.2 status: GREEN
+    autoiameri - 11-30 Days offer: 0.31 status: RED
+    autoiameri - 31-45 Days offer: 0.4 status: RED
+    shartleyd787@autoiameri> 
+    autoiameri - awaiting buyer decision event #163
+    autoiameri - 1-10 Days offer: 0.2 status: GREEN
+    autoiameri - 11-30 Days offer: 0.31 status: RED
+    autoiameri - 31-45 Days offer: 0.4 status: RED
+    shartleyd787@autoiameri>
+    autoiameri - awaiting buyer decision event #163
+    autoiameri - 1-10 Days offer: 0.2 status: GREEN
+    autoiameri - 11-30 Days offer: 0.31 status: RED
+    autoiameri - 31-45 Days offer: 0.4 status: RED
+    shartleyd787@autoiameri>
+    autoiameri - monitor stopped, event over: #163
+    shartleyd787@autoiameri>
 
 ## STOP MONITORING AN EVENT
 
