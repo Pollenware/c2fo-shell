@@ -343,6 +343,19 @@ To monitor a scheduled or live event, use the  *m* (*monitor*) command:
     shartleyd787@autoiameri> m 163 off
     shartleyd787@autoiameri>
 
+## RETRIEVE PRE-OFFER DATA
+
+    shartleyd787@autoiameri> p 163
+    event_id,"supplier_name",supplier_id,"basket_title",total_invoice_amount,discount_amount,apr_amount
+    163,"Foo Widgets Inc",015988,"1-10 Days",4102.77,0.3,27.0
+    163,"Foo Widgets Inc",015988,"31-45 Days",57215.64,0.4,3.66
+    163,"Acme Hardware",034020,"1-10 Days",24518.99,0.3,15.54
+    163,"Acme Hardware",034020,"11-30 Days",456201.51,0.4,6.1
+    163,"Acme Hardware",034020,"31-45 Days",283642.97,0.5,4.89
+
+    autoiameri - pre-offers received
+    shartleyd787@autoiameri> p 163
+
 ---
 
 # LOCKS

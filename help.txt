@@ -40,6 +40,8 @@
  m <evt>            monitor     - monitor an event           > m 165
  m <evt> off        monitor     - stop monitoring an event   > m 165 off
 --------------------------------------------------------------------------------
+ p <evt>            pre-offers  - retrieve pre-offer report  > p 165
+--------------------------------------------------------------------------------
  o <evt> <bk> <bps> offer       - submit a discount          > o 169 90940 120
 --------------------------------------------------------------------------------
  r                  repl        - start TCP REPL server      > r
