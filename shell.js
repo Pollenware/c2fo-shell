@@ -521,7 +521,22 @@ shell.prompt.handleCommand = function ( command ) {
                     monitorMsg = MCat.monitorBliveMsg;
                   else
                     monitorMsg = MCat.monitorSchedMsg;
-                  console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ': ' + thisEvent.cash_pool );
+
+                  // Supplier see current offers and statuses
+                  if ( connection.user_type == MCat.SUPPLIER ) {
+                    console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound );
+                    for (  var b in thisEvent.event_participations ) {
+                       var basket = thisEvent.event_participations[b];
+                       if ( basket.pre_bid_amount > 0 )
+                         console.log( connection.instance + ' - ' + basket.title + ' ' + MCat.eventPreLabel + ': ' + basket.pre_bid_amount );
+                       if ( basket.bid_amount && basket.bid_status && basket.bid_amount > 0 )
+                         console.log( connection.instance + ' - ' + basket.title + ' ' + MCat.eventOfferLabel + ': ' + basket.bid_amount + 
+                           ' ' + MCat.eventStatusLabel + ': ' + MCat.eventStatuses[basket.bid_status] );
+                    }
+                  }
+                  else if ( connection.user_type == MCat.BUYER ) {
+                    console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ' ' + MCat.eventCashLabel + ': ' + thisEvent.cash_pool );
+                  }
                 }
                 else {
                   clearInterval( library.event.timers[connection.instance][eventFound] );
