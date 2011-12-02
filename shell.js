@@ -2,7 +2,7 @@
 
 var MCat      = require( 'message-catalog/shell.js' ).MCat,
     Env       = require( 'ocap/env.js' ).Env,
-    Library   = require( MCat.functions ).Library;
+    Library   = require( MCat.functions ).Library,
     net       = require( 'net' ),
     Prompt    = require( 'prompt.js' ).Prompt,
     repl      = require( 'repl' ),
@@ -522,20 +522,23 @@ shell.prompt.handleCommand = function ( command ) {
                   else
                     monitorMsg = MCat.monitorSchedMsg;
 
-                  // Supplier see current offers and statuses
+                  // Suppliers see current offers and statuses
                   if ( connection.user_type == MCat.SUPPLIER ) {
                     console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound );
                     for (  var b in thisEvent.event_participations ) {
                        var basket = thisEvent.event_participations[b];
                        if ( basket.pre_bid_amount > 0 )
-                         console.log( connection.instance + ' - ' + basket.title + ' ' + MCat.eventPreLabel + ': ' + basket.pre_bid_amount );
+                         console.log( connection.instance + ' - ' + basket.title + ' ' + MCat.eventPreLabel + ': ' +
+                           basket.pre_bid_amount );
                        if ( basket.bid_amount && basket.bid_amount > 0 )
-                         console.log( connection.instance + ' - ' + basket.title + ' ' + MCat.eventOfferLabel + ': ' + basket.bid_amount + 
-                           ' ' + MCat.eventStatusLabel + ': ' + MCat.eventStatuses[basket.bid_status] );
+                         console.log( connection.instance + ' - ' + basket.title + ' ' + MCat.eventOfferLabel + 
+                           ': ' + basket.bid_amount + ' ' + MCat.eventStatusLabel + ': ' + 
+                           MCat.eventStatuses[basket.bid_status] );
                     }
                   }
                   else if ( connection.user_type == MCat.BUYER ) {
-                    console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ' ' + MCat.eventCashLabel + ': ' + thisEvent.cash_pool );
+                    console.log( "\n" + connection.instance + ' - ' + monitorMsg + ' #' + eventFound + ' ' +
+                      MCat.eventCashLabel + ': ' + thisEvent.cash_pool );
                   }
                 }
                 else {
@@ -612,6 +615,27 @@ shell.prompt.handleCommand = function ( command ) {
       }
       else {
         console.error( MCat.notFoundMsg );
+      }
+    }
+
+    // 
+    // pre-offers - p
+    //
+    else if ( /^\s*(p|pre-offers)\s+[0-9]+\s*$/.test( command ) ) {
+      command = command.split( /\s+/ );
+      var eventId = command[1] && command[1].trim();
+      var eventFound = false;
+      for ( var e in connection.events ) {
+        if ( eventId == e )
+         eventFound = true; 
+      }
+      if ( !eventFound ) {
+        console.error( MCat.errorEventNotFound );
+      }
+      else {
+        if ( env.context.debug ) 
+          console.info( MCat.preOffersMsg + eventId);
+        library.event.getPreOffers( connectionId, connection, eventId );
       }
     }
 
