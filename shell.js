@@ -197,6 +197,21 @@ shell.prompt.handleCommand = function ( command ) {
       }
     }
 
+    // 
+    // award - a 
+    //
+    else if ( /^\s*(a|award)\s+[\-0-9]+\s*$/.test( command ) ) {
+      command = command.split( /\s+/ );
+      var eventDate = command[1] && command[1].trim();
+      if ( env.context.debug ) 
+        console.info( MCat.awardMsg + ': ' + eventDate );
+      if ( connection.user_type == MCat.SUPPLIER ) {
+        library.event.getAward( connectionId, connection, eventDate );
+      }
+      else
+        console.error( MCat.errorNoBuyerMsg );
+    }
+
     //
     // baskets - b 
     //

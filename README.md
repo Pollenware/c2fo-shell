@@ -288,7 +288,7 @@ A simple logging facility allows the ocap-shell user to write her data to disk a
 
 Pre-offers before an event and offers during an event are both supported transparently within the *o* (*offer*) command:
 
-## OFFER
+## OFFER (supplier-only)
 
     shartleyd787@autoiameri> b 163 0
     {
@@ -343,9 +343,9 @@ To monitor a scheduled or live event, use the  *m* (*monitor*) command:
     shartleyd787@autoiameri> m 163 off
     shartleyd787@autoiameri>
 
-## RETRIEVE PRE-OFFER DATA
+## RETRIEVE PRE-OFFER DATA (buyer-only)
 
-    shartleyd787@autoiameri> p 163
+    autoiameri1@autoiameri> p 163
     event_id,"supplier_name",supplier_id,"basket_title",total_invoice_amount,discount_amount,apr_amount
     163,"Foo Widgets Inc",919988,"1-10 Days",4102.77,0.3,27.0
     163,"Foo Widgets Inc",919988,"31-45 Days",57215.64,0.4,3.66
@@ -354,12 +354,12 @@ To monitor a scheduled or live event, use the  *m* (*monitor*) command:
     163,"Acme Hardware",434020,"31-45 Days",283642.97,0.5,4.89
 
     autoiameri - pre-offers received
-    shartleyd787@autoiameri> p 163
+    autoiameri1@autoiameri> p 163
 
-## RETRIEVE LIVE OFFER DATA
+## RETRIEVE LIVE OFFER DATA (buyer-only)
 
-    shartleyd787@autoiameri> o 163
-    shartleyd787@autoiameri> 
+    autoiameri1@autoiameri> o 163
+    autoiameri1@autoiameri> 
     event_id,"supplier_name",supplier_id,"basket_title",total_invoice_amount,discount_percent,discount_amount,apr_amount,status
     163,"Beta Manuf Co",711140,"1-10 Days",1698.0,0.15,2.55,9.17,0
     163,"Beta Manuf Co",711140,"11-30 Days",13809.0,0.05,6.9,0.72,0
@@ -373,14 +373,37 @@ To monitor a scheduled or live event, use the  *m* (*monitor*) command:
     163,"Acme Hardware",434020,"31-45 Days",283642.97,0.5,1418.21,4.89,0
 
     autoiameri - offers retrieved
-    shartleyd787@autoiameri> 
+    autoiameri1@autoiameri> 
+
+## RETRIEVE AWARD DATA (supplier-only)
+
+    shartleyd787@autoiameri> a 2011-09-23
+    shartleyd787@autoiameri>
+    voucher,date,due,amount,discount,event,winner
+    569308,2011-11-02,2012-01-13,2702.55,0.4,166,false
+    569308,2011-11-02,2012-01-14,835.55,0.4,166,false
+    569308,2011-11-02,2012-01-15,4674.6,0.4,166,false
+    578279,2011-11-15,2012-01-20,5700.46,0.4,166,false
+    578279,2011-11-15,2012-01-20,5102.27,0.4,166,false
+    578279,2011-11-15,2012-01-20,6772.98,0.4,166,false
+    578279,2011-11-17,2012-01-21,7998.17,0.4,166,false
+    578279,2011-11-14,2012-01-24,4187.15,0.4,166,false
+    578279,2011-11-14,2012-01-24,3180.3,0.4,166,false
+    578279,2011-11-15,2012-01-21,12072.23,0.4,166,false
+    578279,2011-11-15,2012-01-24,3989.38,0.4,166,false
+    552459,2011-10-03,2011-12-13,842.8,0.3,166,true
+    553302,2011-10-03,2011-12-13,183.46,0.3,166,true
+    553302,2011-10-04,2011-12-17,917.28,0.3,166,true
+    552459,2011-10-04,2011-12-17,2159.23,0.3,166,true
+    autoiameri - award data retrieved
+    shartleyd787@autoiameri>
 
 ---
 
-# LOCKS
+# LOCKS (buyer-only)
 
 Individual basket statuses are edited via disposition locks:
 
-    shartleyd787@autoiameri> L 304 34218890 92448 1
+    autoiameri1@autoiameri> L 304 34218890 92448 1
     {"details":["34218890","basket","92448","status"],"supplierId":"34218890","status":"1"}    
 

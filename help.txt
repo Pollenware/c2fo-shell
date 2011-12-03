@@ -2,6 +2,8 @@
  <user>@<instance>  (connect)   - connect to OCAP instance   > betty@buyer
  <user>@<instance>@<emulate>    - admin connect, emulating   > jon@buyer@buyer1
 --------------------------------------------------------------------------------
+ a <yyyy-mm-dd>     award       - show award results for day > a 2011-09-23
+--------------------------------------------------------------------------------
  b <evt>            baskets     - show all baskets           > b 150
  b <evt> <bk>       baskets     - show basket by id          > b 155 1
 --------------------------------------------------------------------------------
