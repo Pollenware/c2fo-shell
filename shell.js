@@ -567,8 +567,32 @@ shell.prompt.handleCommand = function ( command ) {
       shell.prompt.show();
     }
 
+    // 
+    // offers - o (buyer syntax)
     //
-    // offer - o
+    else if ( /^\s*(o|offers)\s+[0-9]+\s*$/.test( command ) ) {
+      command = command.split( /\s+/ );
+      var eventId = command[1] && command[1].trim();
+      var eventFound = false;
+      for ( var e in connection.events ) {
+        if ( eventId == e )
+         eventFound = true; 
+      }
+      if ( !eventFound ) {
+        console.error( MCat.errorEventNotFound );
+      }
+      else {
+        if ( env.context.debug ) 
+          console.info( MCat.offersMsg + eventId );
+        if ( connection.user_type == MCat.BUYER ) 
+          library.event.getOffers( connectionId, connection, eventId );
+        else
+          console.error( MCat.errorNoSupplierMsg );
+      }
+    }
+
+    //
+    // offer - o (supplier syntax)
     //
     else if ( /^\s*(o|offer)\s+\d+\s+\d+\s+\d+\s*$/.test( command ) ) {
 
@@ -635,8 +659,11 @@ shell.prompt.handleCommand = function ( command ) {
       }
       else {
         if ( env.context.debug ) 
-          console.info( MCat.preOffersMsg + eventId);
-        library.event.getPreOffers( connectionId, connection, eventId );
+          console.info( MCat.preOffersMsg + eventId );
+        if ( connection.user_type == MCat.BUYER ) 
+          library.event.getPreOffers( connectionId, connection, eventId );
+        else
+          console.error( MCat.errorNoSupplierMsg );
       }
     }
 
