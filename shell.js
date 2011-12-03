@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+(function() {
 var MCat      = require( 'message-catalog/shell.js' ).MCat,
     Env       = require( 'ocap/env.js' ).Env,
     Library   = require( MCat.functions ).Library,
@@ -699,3 +700,4 @@ shell.prompt.handleCommand = function ( command ) {
   shell.prompt.show();
 
 };
+}(this));
