@@ -1,9 +1,12 @@
 #!/usr/bin/env node
   
 (function() {
+
   var Config    = require( 'config/shell.js' ).Config,
       MCat      = require( 'message-catalog/shell.js' ).MCat,
       Env       = require( 'ocap/env.js' ).Env,
+      events    = require( 'events' ),
+      emitter   = new events.EventEmitter(),
       Library   = require( MCat.functions ).Library,
       net       = require( 'net' ),
       Prompt    = require( 'prompt.js' ).Prompt,
@@ -12,9 +15,6 @@
       Util      = require( 'util.js' ).Util,
       version   = '0.0.1';
   
-  //
-  // define appearance & behavior of command-line
-  //
   var prompt = new Prompt( {
     debug     : false,
     default   : function () { return MCat.promptPrefix + '> '; },
@@ -24,11 +24,17 @@
     version   : version
   } );
   
-  //
-  // specify prompt to surface when every command is finished;
-  // optionally printing a message first
-  //
-  var finishHandler = function ( promptContent, msg ) {
+  var failHandler = function ( promptContent, fail ) {
+    if ( fail ) {
+      console.error( fail );
+    }
+    if ( promptContent )  {
+      prompt.content = function () { return promptContent + '> '; };
+    }
+    prompt.show();
+  };
+ 
+  var winHandler = function ( promptContent, msg ) {
     if ( msg ) {
       console.log( msg );
     }
@@ -37,11 +43,21 @@
     }
     prompt.show();
   };
-  
+
+  emitter.on(
+    'debugMessage'    , function ( msg )    { console.info( MCat.debugPrefix + ': ' + msg ); }).on(
+    'failOCAPfail'    , function ( prompt ) { failHandler( prompt, MCat.failPrefix + ' - ' + MCat.failFail ); }).on(
+    'failOCAPresponse', function ( prompt ) { failHandler( prompt, MCat.failPrefix + ' - ' + MCat.failOCAPresponse); }).on(
+    'failJSONParse'   , function ( prompt ) { failHandler( prompt, MCat.failPrefix + ' - ' + MCat.failJSONParse); }).on(
+    'failOCAPservice' , function ( prompt, failMsg ) { failHandler( prompt, MCart.failPrefix + ' - ' + failMsg ); }).on(
+    'failShellCommand', function ( prompt, failMsg ) { failHandler( prompt, MCart.failPrefix + ' - ' + failMsg ); }).on(
+    'winOCAPservice'  , function ( prompt, serviceMsg ) { winHandler( prompt, serviceMsg ) }
+  );
+
   //
   // load external routines
   //
-  var library = new Library( MCat.agentString + version, finishHandler, Config.pageSize );
+  var library = new Library( MCat.agentString + version, winHandler, emitter, Config.pageSize );
   
   //
   // handle command-line options and signing in 
@@ -49,10 +65,7 @@
   var authHandler = function ( connectionId, pwd ) {
     library.auth.signIn( connectionId, pwd );
   };
-  var errorHandler = function ( error ) {
-    throw error;
-  };
-  var env = new Env( version, authHandler, finishHandler );
+  var env = new Env( version, authHandler, winHandler );
   prompt.isDebugging = env.context.debug;
   var libModules = [ 'net', 'auth', 'event', 'invoice' ];
   for (var m in libModules) {
@@ -68,34 +81,26 @@
   // add to connection list only after 
   // signin attempt fully authenticated
   //
-  library.auth.signInCallback = function ( connectionId, pwd, user, instance, response, error ) {
-    if ( error ) {
-      console.error( MCat.errorConnect + ': ' + connectionId );
-      finishHandler( MCat.promptPrefix, error );
-      return;
+  library.auth.signInCallback = function ( connectionId, pwd, user, instance, response ) {
+    if ( response ) {
+      if ( library.auth.isDebugging )
+        emitter.emit( 'debugMessage', MCat.debugPrefix + ' - ' + instance + ' - ' + MCat.sessionGrant );
+      shell.env.connections[connectionId] = shell.env.connections[connectionId] || {};
+      var connection           = shell.env.connections[connectionId];
+      var payload              = JSON.parse( response.body ).payload;
+      connection.id            = library.connectionCount++;
+      connection.instance      = instance;
+      connection.lastActive    = new Date( payload.created );
+      connection.lastAction    = MCat.successSignin;
+      connection.password      = pwd;
+      connection.sessionCookie = response.headers['set-cookie'][0];
+      connection.user          = user;
+      library.auth.getDetails( connectionId, connection, library.event.getDetails );
     }
     else {
-      if ( response ) {
-        if ( library.auth.isDebugging ) { 
-          console.info( MCat.debugPrefix + ' - ' + instance + ' - ' + MCat.sessionGrantMsg );
-        }
-        shell.env.connections[connectionId] = shell.env.connections[connectionId] || {};
-        var connection           = shell.env.connections[connectionId];
-        var payload              = JSON.parse( response.body ).payload;
-        connection.id            = library.connectionCount++;
-        connection.instance      = instance;
-        connection.lastActive    = new Date( payload.created );
-        connection.lastAction    = MCat.successSigninMsg;
-        connection.password      = pwd;
-        connection.sessionCookie = response.headers['set-cookie'][0];
-        connection.user          = user;
-        library.auth.getDetails( connectionId, connection, library.event.getDetails );
-      }
-      else {
-        console.error( MCat.errorConnect + ': ' + connectionId );
-        finishHandler( MCat.promptPrefix );
-        return;
-      }
+      emitter.emit( 'failShellCommand', MCat.failConnect + ': ' + connectionId );
+      winHandler( MCat.promptPrefix );
+      return;
     }
   };
   
@@ -117,7 +122,7 @@
     // help - h
     //
     else if ( /^\s*(h|help)\s*$/.test( command ) ) {
-      MCat.helpMsg( prompt );
+      MCat.help( prompt );
       return;
     }
   
@@ -129,8 +134,8 @@
       tokens.shift();
       var code = tokens.join( ' ' );
       try { shell.log( eval ( code ) ) ; } 
-      catch ( err ) {
-        console.error( err );
+      catch ( e ) {
+        emitter.emit( 'failShellCommand', e );
       }
     }
   
@@ -139,7 +144,7 @@
     //
     else if ( /^\s*(q|quit)\s*$/.test( command ) ) {
       if ( env.context.debug ) 
-        console.info( MCat.exitMsg );
+        emitter.emit( 'debugMessage', MCat.exit );
       process.exit( 0 );
     }
   
@@ -153,14 +158,13 @@
       });
       server.listen( Config.replPort || 5100 )
       server.on( 'error', function ( e ) {
-        console.error( e );
-        shell.prompt.show();
+        emitter.emit( 'failShellCommand', e );
       });
-      console.log( MCat.replUseMsg + ' ' + MCat.replAddress + ' ' + MCat.replPort );
+      console.info( MCat.replUse + ' ' + MCat.replAddress + ' ' + MCat.replPort );
     }
   
     // 
-    // no connections error
+    // no connections
     //
     else if ( !shell.env.hasConnections() ) {
       shell.prompt.show();
@@ -193,8 +197,7 @@
           }
         }
         if ( !found ) {
-          console.error( MCat.notFoundMsg );
-          shell.prompt.show();
+          emitter.emit( 'failShellCommand', MCat.notFound );
         }
       }
   
@@ -205,12 +208,12 @@
         command = command.split( /\s+/ );
         var eventDate = command[1] && command[1].trim();
         if ( env.context.debug ) 
-          console.info( MCat.awardMsg + ': ' + eventDate );
+          emitter.emit( 'debugMessage', MCat.award + ': ' + eventDate );
         if ( connection.user_type == MCat.SUPPLIER ) {
           library.event.getAward( connectionId, connection, eventDate );
         }
         else
-          console.error( MCat.errorNoBuyerMsg );
+          emitter.emit( 'failShellCommand', MCat.failNoBuyer );
       }
   
       //
@@ -227,7 +230,7 @@
               shell.log( connection.events[eventId].baskets[id] );
             }
             else {
-              console.error( MCat.notFoundMsg );
+              emitter.emit( 'failShellCommand', MCat.notFound );
             }
           }
           catch ( err ) {
@@ -236,11 +239,11 @@
                 shell.log( connection.events[eventId].event_participations[id] );
               }
               else {
-                console.error( MCat.notFoundMsg );
+                emitter.emit( 'failShellCommand', MCat.notFound );
               }
             }
             catch ( err ) {
-              console.error( MCat.notFoundMsg );
+              emitter.emit( 'failShellCommand', MCat.notFound );
             }
           }
         }
@@ -257,11 +260,11 @@
               }
             }
             else {
-              console.error( MCat.noBasketsMsg );
+              emitter.emit( 'failShellCommand', MCat.noBaskets );
             }
           }
           catch ( err ) {
-            console.error( MCat.notFoundMsg );
+            emitter.emit( 'failShellCommand', MCat.notFound );
           }
         }
       }
@@ -290,7 +293,7 @@
             found = true;
           }
           if ( !found ) {
-            console.error( MCat.notFoundMsg );
+            emitter.emit( 'failShellCommand', MCat.notFound );
           }
         }
         else if ( /^\s*(c|connections)\s*$/.test( command) ) {
@@ -298,7 +301,7 @@
           shell.log( shell.env.listConnections() );
         }
         if ( !found ) {
-          console.error( MCat.notFoundMsg );
+          emitter.emit( 'failShellCommand', MCat.notFound );
         }
         shell.prompt.show();
         return;
@@ -339,7 +342,7 @@
           }
         }
         if ( !found ) {
-          console.error( MCat.notFoundMsg );
+          emitter.emit( 'failShellCommand', MCat.notFound );
         }
         shell.prompt.show();
         return;
@@ -384,7 +387,7 @@
           shell.log( suppressDetail );
         }
         else {
-          console.error( MCat.notFoundMsg );
+          emitter.emit( 'failShellCommand', MCat.notFound );
         }
       }
   
@@ -399,7 +402,7 @@
     
           if ( /^\s*(i|invoices)\s+(p|print)\s*$/.test( command ) ) {
             if ( env.context.debug )
-              console.info( MCat.debugPrefix + ' - ' + MCat.invPrintMsg );
+              emitter.emit( 'debugMessage', MCat.invPrint );
             var invoices = shell.env.connections[shell.env.connectionString()].invoices_local;
        
             var header = 'pollenware_invoice_id,';
@@ -418,7 +421,7 @@
           }
           else if ( /^\s*(i|invoices)\s+(c|clear)\s*$/.test( command ) ) {
             if ( env.context.debug )
-              console.info( MCat.debugPrefix + ' - ' + MCat.invClearMsg );
+              emitter.emit( 'debugMessage', MCat.invClear );
             shell.env.connections[shell.env.connectionString()].invoices_local = {};
             delete shell.env.connections[shell.env.connectionString()].invoicePlaceholder;
           }
@@ -435,7 +438,7 @@
         }
   
         else {
-          console.error( MCat.notFoundMsg );
+          emitter.emit( 'failShellCommand', MCat.notFound );
         }
       }
   
@@ -464,18 +467,17 @@
         if ( instruction == 'c' || instruction == 'clear' ) {
           shell.logData = [];
           if ( env.context.debug )
-            console.info( MCat.logClearMsg );
+            emitter.emit( 'debugMessage', MCat.logClear );
         }
         else if ( instruction == 'w' || instruction == 'write' ) {
           var logFile = MCat.logFile || ( process.argv[1].split( '/' ).pop() + '.log' );
           if ( env.context.debug )
-            console.info( MCat.logWriteMsg + ' ' + logFile + '...' );
+            emitter.emit( 'debugMessage', MCat.logWrite + ' ' + logFile + '...' );
           try {
             Util.appendFile( logFile,  logText );
           }
-          catch ( err ) {
-            console.error( err );
-            self.prompt.show();
+          catch ( e ) {
+            emitter.emit( 'failShellCommand', e );
           }
         }
         else {
@@ -495,18 +497,18 @@
         if ( turnOff == 'off' ) {
           if ( library.event.timers[connection.instance] && library.event.timers[connection.instance][requestedEvent] ) {
             if ( env.context.debug )
-              console.info( MCat.monitorOffMsg + ' '  + requestedEvent );
+              emitter.emit( 'debugMessage', MCat.monitorOff + ' ' + requestedEvent );
             clearInterval( library.event.timers[connection.instance][requestedEvent] );
             delete library.event.timers[connection.instance][requestedEvent];
           }
           else {
-            console.error( MCat.errorEventNotFound + ': '  + requestedEvent );
+            emitter.emit( 'failShellCommand', MCat.failEventNotFound + ': '  + requestedEvent );
           }
         }
         else {
           if ( library.event.timers[connection.instance] && library.event.timers[connection.instance][requestedEvent] ) {
             if ( env.context.debug )
-              console.info( requestedEvent + ' ' + MCat.nowMonitoredMsg );
+              emitter.emit( 'debugMessage', requestedEvent + ' ' + MCat.nowMonitored );
           }
           else {
             var sanitizedConnection = Util.sanitizeConnection( connection );
@@ -514,7 +516,7 @@
             if ( sanitizedConnection && sanitizedConnection.events) {
               var eventFound = 0;
               if ( env.context.debug )
-                console.info( MCat.monitorSearchMsg + requestedEvent + '...' );
+                emitter.emit( 'debugMessage', MCat.monitorSearch + requestedEvent + '...' );
               for ( var e in sanitizedConnection.events ) {
                 if ( requestedEvent == e ) {
                   eventFound = e
@@ -522,22 +524,22 @@
               }
               if ( eventFound ) {
                 if ( env.context.debug )
-                  console.info( MCat.monitorOnMsg + ' '  + eventFound );
+                  emitter.emit( 'debugMessage', MCat.monitorOn + ' ' + eventFound );
                 var monitorEvent = function () {                      // finishHandler override
                   library.event.getDetails( connectionId, connection, function ( promptContent, msg ) {
                     if ( msg )
-                      console.log( msg );
+                      // console.log( msg );
                     prompt.show();
                   } );
                   var monitorMsg;
                   thisEvent = connection.events[eventFound];
                   if ( thisEvent ) {
                     if ( thisEvent.is_active && thisEvent.is_live ) 
-                      monitorMsg = MCat.monitorLiveMsg;
+                      monitorMsg = MCat.monitorLive;
                     else if ( thisEvent.is_active && thisEvent.is_buyer_live ) 
-                      monitorMsg = MCat.monitorBliveMsg;
+                      monitorMsg = MCat.monitorBlive;
                     else
-                      monitorMsg = MCat.monitorSchedMsg;
+                      monitorMsg = MCat.monitorSched;
   
                     // Suppliers see current offers and statuses
                     if ( connection.user_type == MCat.SUPPLIER ) {
@@ -572,11 +574,11 @@
                );
               }
               else {
-                console.error( MCat.errorEventNotFound + ': ' + requestedEvent );
+                emitter.emit( 'failShellCommand', MCat.failEventNotFound + ': ' + requestedEvent );
               }
             }
             else {
-              console.error( MCat.errorNoEventsMsg );
+              emitter.emit( 'failShellCommand', MCat.failNoEvents );
             }
           }
         }
@@ -595,15 +597,15 @@
            eventFound = true; 
         }
         if ( !eventFound ) {
-          console.error( MCat.errorEventNotFound );
+          emitter.emit( 'failShellCommand', MCat.failEventNotFound );
         }
         else {
           if ( env.context.debug ) 
-            console.info( MCat.offersMsg + eventId );
+            emitter.emit( 'debugMessage', MCat.offers + eventId );
           if ( connection.user_type == MCat.BUYER ) 
             library.event.getOffers( connectionId, connection, eventId );
           else
-            console.error( MCat.errorNoSupplierMsg );
+            emitter.emit( 'failShellCommand', MCat.failNoSupplier );
         }
       }
   
@@ -617,17 +619,15 @@
         var basket       = command[2] && command[2].trim();
         var bps          = command[3] && command[3].trim();
         if ( !connection.events ) {
-          console.error( MCat.errorNoEventsMsg );
-          shell.prompt.show();
+          emitter.emit( 'failShellCommand', MCat.failNoEvents );
           return;
         }
         else if ( connection.user_type == MCat.BUYER ) {
-          console.error( MCat.errorPrefix + ' - ' + MCat.errorBuyerBid );
-          shell.prompt.show();
+          emitter.emit( 'failShellCommand', MCat.failPrefix + ' - ' + MCat.failBuyerBid );
           return;
         }
         else if ( !connection.events[eventId] ) {
-          console.error( MCat.notFoundMsg );
+          emitter.emit( 'failShellCommand', MCat.notFound );
         }
         else if ( eventId && basket && bps ) {
           if ( connection.events[eventId] ) {
@@ -646,16 +646,15 @@
               library.event.placeOffer( connectionId, connection, thisBasket );
             }
             else {
-              console.error( MCat.notFoundMsg );
-              shell.prompt.show();
+              emitter.emit( 'failShellCommand', MCat.notFound );
             }
           }
           else if ( !connection.events[eventId] ) {
-            console.error( MCat.notFoundMsg );
+            emitter.emit( 'failShellCommand', MCat.notFound );
           }
         }
         else {
-          console.error( MCat.notFoundMsg );
+          emitter.emit( 'failShellCommand', MCat.notFound );
         }
       }
   
@@ -671,15 +670,15 @@
            eventFound = true; 
         }
         if ( !eventFound ) {
-          console.error( MCat.errorEventNotFound );
+          emitter.emit( 'failShellCommand', MCat.failEventNotFound );
         }
         else {
           if ( env.context.debug ) 
-            console.info( MCat.preOffersMsg + eventId );
+            emitter.emit( 'debugMessage', MCat.preOffers + eventId );
           if ( connection.user_type == MCat.BUYER ) 
             library.event.getPreOffers( connectionId, connection, eventId );
           else
-            console.error( MCat.errorNoSupplierMsg );
+            emitter.emit( 'failShellCommand', MCat.failNoSupplier );
         }
       }
   
@@ -692,8 +691,7 @@
   
           for ( var e in connection.events ) {
             if (  connection.events[e].is_live || connection.events[e].is_buyer_live ) {
-              console.error( MCat.errorLiveEventMsg );
-              shell.prompt.show();
+              emitter.emit( 'failShellCommand', MCat.failLiveEvent );
               return;
             }
           }
@@ -705,7 +703,7 @@
           for ( var i in invoiceIds ) {
             var iId = invoiceIds[i];
             if (! /^[ieEI][\|\d]+$/.test( iId ) ) {
-              console.error( MCat.errorAmbiguous + ': ' + iId );
+              emitter.emit( 'failShellCommand', MCat.failAmbiguous + ': ' + iId );
               continue;
             }
             else {
@@ -718,8 +716,7 @@
                 exclude.push( iId );
               }
               else {
-                console.error( MCat.notFoundMsg );
-                shell.prompt.show();
+                emitter.emit( 'failShellCommand', MCat.notFound );
                 return;
               }
             }
@@ -727,8 +724,7 @@
           library.invoice.toggle( connectionId, connection, keep, exclude );
         }
         else {
-          console.error( MCat.notFoundMsg );
-          shell.prompt.show();
+          emitter.emit( 'failShellCommand', MCat.notFound );
         }
       }
   
@@ -736,7 +732,7 @@
       // unrecognized command
       //
       else {
-        console.error( MCat.notFoundMsg );
+        emitter.emit( 'failShellCommand', MCat.notFound );
       }
     }
   
