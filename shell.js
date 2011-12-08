@@ -57,14 +57,14 @@
   emitter.on(
     'debug', function ( msg ) {
       process.nextTick( function () { console.info( MCat.debugPrefix + msg ); } ); }).on(
-    'failOCAPfail', function ( prompt ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + MCat.failFail ); } ); }).on(
-    'failOCAPresponse', function ( prompt ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + MCat.failOCAPresponse ); } ); }).on(
     'failJSONParse', function ( prompt ) {
       process.nextTick( function () { failHandler( prompt, MCat.failPrefix + MCat.failJSONParse ); } ); }).on(
+    'failOCAPfail', function ( prompt ) {
+      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + MCat.failFail ); } ); }).on(
     'failOCAPservice', function ( prompt, failMsg ) {
       process.nextTick( function () { failHandler( prompt, MCat.failPrefix + failMsg ); } ); }).on(
+    'failOCAPresponse', function ( prompt ) {
+      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + MCat.failOCAPresponse ); } ); }).on(
     'failShellCommand', function ( failMsg ) {
       process.nextTick( function () { failHandler( null, MCat.failPrefix + failMsg ); } ); }).on(
     'winOCAPservice', function ( prompt, serviceMsg ) {
@@ -88,15 +88,10 @@
     library[libModules[m]].isDebugging = env.context.debug;
   }
   
-  // 
-  // add to connection list only after 
-  // signin attempt fully authenticated
-  //
-  library.auth.signInCallback = function ( connectionId, pwd, user, instance, response ) {
+  library.auth.access = function ( connectionId, pwd, user, instance, response ) {
     if ( response ) {
       if ( library.auth.isDebugging )
         emitter.emit( 'debug', instance + MCat.s + MCat.sessionGrant );
-      var payload = JSON.parse( response.body ).payload;
       var shell = new Connector( env, prompt, library );
       shell.env.connections[connectionId] = shell.env.connections[connectionId] || {};
       var connection = shell.env.connections[connectionId];
@@ -105,6 +100,7 @@
         //
         // ** these commands don't require a connection
         //
+
         //
         // <user>@<instance> (connect)
         //
@@ -732,6 +728,14 @@
       };
       connection.id            = library.connectionCount++;
       connection.instance      = instance;
+      var payload;
+      try {
+        payload = JSON.parse( response.body ).payload;
+      }
+      catch( e ) {
+        emitter.emit( 'failJSONParse', e );
+        return;
+      }
       connection.lastActive    = new Date( payload.created );
       connection.lastAction    = MCat.successSignin;
       connection.password      = pwd;
