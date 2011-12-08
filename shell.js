@@ -18,7 +18,7 @@
   var prompt = new Prompt( {
     debug     : false,
     default   : function () { return MCat.promptPrefix + MCat.promptPoint; },
-    exitMsg   : MCat.exitMsg,
+    exitMsg   : MCat.exit,
     helpBlurb : MCat.helpBlurb,
     title     : MCat.title,
     version   : version
@@ -40,7 +40,7 @@
     }
   };
  
-  var winHandler = function ( promptContent, msg ) {
+  var serviceHandler = function ( promptContent, msg ) {
     try {
       if ( msg ) 
         console.log( msg );
@@ -55,32 +55,45 @@
   };
 
   emitter.on(
+    'commandComplete',  function ( prompt, shellMsg ) {
+      serviceHandler( prompt,  shellMsg ); }).on(
+
+    'commandFail', function ( failMsg ) {
+      process.nextTick( function () { failHandler( null, MCat.failPrefix   + ( failMsg ||
+        MCat.commandFail ) ); } ); }).on(
+
     'debug', function ( msg ) {
-      process.nextTick( function () { console.info( MCat.debugPrefix + msg ); } ); }).on(
-    'failJSONParse', function ( prompt ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + MCat.failJSONParse ); } ); }).on(
-    'failOCAPfail', function ( prompt ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + MCat.failFail ); } ); }).on(
-    'failOCAPservice', function ( prompt, failMsg ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + failMsg ); } ); }).on(
-    'failOCAPresponse', function ( prompt ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + MCat.failOCAPresponse ); } ); }).on(
-    'failShellCommand', function ( failMsg ) {
-      process.nextTick( function () { failHandler( null, MCat.failPrefix + failMsg ); } ); }).on(
-    'winOCAPservice', function ( prompt, serviceMsg ) {
-      process.nextTick( function () { winHandler( prompt, serviceMsg ); } ); }).on(
-    'winShellCommand', function ( prompt, shellMsg ) {
-      process.nextTick( function () { winHandler( null, shellMsg ); }
-    );}
+      console.info( MCat.debugPrefix + msg );  }).on(
+
+    'failJSONParse',    function ( prompt, failMsg ) {
+      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + ( failMsg ||
+        MCat.failJSONParse )); } ); }).on(
+
+    'failOCAPfail',     function ( prompt, failMsg ) {
+      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + ( failMsg ||
+        MCat.failFail ) ); } ); }).on(
+
+    'failOCAPservice',  function ( prompt, failMsg ) {
+      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + ( failMsg ||
+        MCat.failOCAPservice ) ); } ); }).on(
+
+    'failOCAPresponse', function ( prompt, failMsg ) {
+      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + ( failMsg ||
+        MCat.failOCAPresponse ) ); } ); }).on(
+
+    'serviceCallComplete',   function ( prompt, serviceMsg ) {
+      serviceHandler( prompt,  serviceMsg ); 
+    }
+
   );
 
-  var library = new Library( MCat.agentString + version, winHandler, emitter, Config.pageSize );
+  var library = new Library( MCat.agentString + version, serviceHandler, emitter, Config.pageSize );
   
   var authHandler = function ( connectionId, pwd ) {
     library.auth.signIn( connectionId, pwd );
   };
 
-  var env = new Env( version, authHandler, winHandler );
+  var env = new Env( version, authHandler, serviceHandler );
 
   prompt.isDebugging = env.context.debug;
   var libModules = ['net', 'auth', 'event', 'invoice'];
@@ -92,14 +105,22 @@
     if ( response ) {
       if ( library.auth.isDebugging )
         emitter.emit( 'debug', instance + MCat.s + MCat.sessionGrant );
-      var shell = new Connector( env, prompt, library );
-      shell.env.connections[connectionId] = shell.env.connections[connectionId] || {};
-      var connection = shell.env.connections[connectionId];
+      var connection;
+      var cachedConnectionHandler = function ( cId, c ) {
+        connectionId = cId;
+        connection = c;
+        var tokens = cId.split( '@' );
+        connection.user      = tokens[0].trim();
+        connection.instance  = tokens[1].trim();
+        connection.emulating = ( tokens[2] && tokens[2].trim() );
+        emitter.emit( 'commandComplete', cId );
+      };
+      var shell = new Connector( env, prompt, library, cachedConnectionHandler );
       shell.prompt.handleCommand = function ( command ) {
-      
-        //
-        // ** these commands don't require a connection
-        //
+
+      //
+      // ** these commands don't require a connection
+      //
 
         //
         // <user>@<instance> (connect)
@@ -124,9 +145,12 @@
           var tokens = command.split( /\s+/ );
           tokens.shift();
           var code = tokens.join( ' ' );
-          try { shell.log( eval ( code ) ) ; } 
+          try {
+            shell.log( eval ( code ) ) ;
+            emitter.emit( 'commandComplete' );
+          } 
           catch ( e ) {
-            emitter.emit( 'failShellCommand', e );
+            emitter.emit( 'commandFail', e );
           }
         }
       
@@ -149,7 +173,7 @@
           });
           server.listen( Config.replPort || 5100 )
           server.on( 'error', function ( e ) {
-            emitter.emit( 'failShellCommand', e );
+            emitter.emit( 'commandFail', e );
           });
           console.info( MCat.replUse + MCat.replAddress + MCat.replPort );
         }
@@ -162,9 +186,9 @@
           return;
         }
       
-        //
-        // ** these commands require a connection
-        //
+      //
+      // ** these commands require a connection
+      //
               
         else { 
       
@@ -185,7 +209,7 @@
               }
             }
             if ( !found ) {
-              emitter.emit( 'failShellCommand', MCat.notFound );
+              emitter.emit( 'commandFail', MCat.notFound );
             }
           }
       
@@ -201,7 +225,7 @@
               library.event.getAward( connectionId, connection, eventDate );
             }
             else
-              emitter.emit( 'failShellCommand', MCat.failNoBuyer );
+              emitter.emit( 'commandFail', MCat.failNoBuyer );
           }
       
           //
@@ -216,22 +240,24 @@
               try {
                 if ( connection.events[eventId].baskets[id] ) {
                   shell.log( connection.events[eventId].baskets[id] );
+                  emitter.emit( 'commandComplete' );
                 }
                 else {
-                  emitter.emit( 'failShellCommand', MCat.notFound );
+                  emitter.emit( 'commandFail', MCat.notFound );
                 }
               }
               catch ( err ) {
                 try {
                   if ( connection.events[eventId].event_participations[id] ) {
                     shell.log( connection.events[eventId].event_participations[id] );
+                    emitter.emit( 'commandComplete' );
                   }
                   else {
-                    emitter.emit( 'failShellCommand', MCat.notFound );
+                    emitter.emit( 'commandFail', MCat.notFound );
                   }
                 }
                 catch ( err ) {
-                  emitter.emit( 'failShellCommand', MCat.notFound );
+                  emitter.emit( 'commandFail', MCat.notFound );
                 }
               }
             }
@@ -241,18 +267,20 @@
                   for ( b in connection.events[eventId].baskets ) {
                     shell.log( connection.events[eventId].baskets[b] );
                   }
+                  emitter.emit( 'commandComplete' );
                 }
                 else if ( connection.events[eventId].event_participations ) {
                   for ( e in connection.events[eventId].event_participations ) {
                     shell.log( connection.events[eventId].event_participations[e] );
                   }
+                  emitter.emit( 'commandComplete' );
                 }
                 else {
-                  emitter.emit( 'failShellCommand', MCat.noBaskets );
+                  emitter.emit( 'commandFail', MCat.noBaskets );
                 }
               }
               catch ( err ) {
-                emitter.emit( 'failShellCommand', MCat.notFound );
+                emitter.emit( 'commandFail', MCat.notFound );
               }
             }
           }
@@ -281,7 +309,7 @@
                 found = true;
               }
               if ( !found ) {
-                emitter.emit( 'failShellCommand', MCat.notFound );
+                emitter.emit( 'commandFail', MCat.notFound );
               }
             }
             else if ( /^\s*(c|connections)\s*$/.test( command) ) {
@@ -289,7 +317,7 @@
               shell.log( shell.env.listConnections() );
             }
             if ( !found ) {
-              emitter.emit( 'failShellCommand', MCat.notFound );
+              emitter.emit( 'commandFail', MCat.notFound );
             }
             shell.prompt.show();
             return;
@@ -330,7 +358,7 @@
               }
             }
             if ( !found ) {
-              emitter.emit( 'failShellCommand', MCat.notFound );
+              emitter.emit( 'commandFail', MCat.notFound );
             }
             shell.prompt.show();
             return;
@@ -347,7 +375,7 @@
               var c = command.split( /\s+/ );
               var attribute = c[1];
               shell.log( sanitizedConnection[attribute] );
-              emitter.emit( 'winShellCommand' );
+              emitter.emit( 'commandComplete' );
             }
             else if ( sanitizedConnection && /^\s*(e|environment)\s*$/.test( command ) ) {
               sanitiziedConnection = sanitizedConnection || {};
@@ -374,10 +402,10 @@
                 }
               }
               shell.log( suppressDetail );
-              emitter.emit( 'winShellCommand' );
+              emitter.emit( 'commandComplete' );
             }
             else {
-              emitter.emit( 'failShellCommand', MCat.notFound );
+              emitter.emit( 'commandFail', MCat.notFound );
             }
           }
       
@@ -393,6 +421,7 @@
               if ( /^\s*(i|invoices)\s+(p|print)\s*$/.test( command ) ) {
                 if ( env.context.debug )
                   emitter.emit( 'debug', MCat.invPrint );
+
                 var invoices = shell.env.connections[shell.env.connectionString()].invoices_local;
            
                 var header = 'pollenware_invoice_id,';
@@ -408,12 +437,14 @@
                   }
                   shell.log( row.replace( /,$/, '' ) );
                 }
+                emitter.emit( 'commandComplete' );
               }
               else if ( /^\s*(i|invoices)\s+(c|clear)\s*$/.test( command ) ) {
                 if ( env.context.debug )
                   emitter.emit( 'debug', MCat.invClear );
                 shell.env.connections[shell.env.connectionString()].invoices_local = {};
                 delete shell.env.connections[shell.env.connectionString()].invoicePlaceholder;
+                emitter.emit( 'commandComplete' );
               }
               else {
                 tokens.shift();
@@ -428,7 +459,7 @@
             }
       
             else {
-              emitter.emit( 'failShellCommand', MCat.notFound );
+              emitter.emit( 'commandFail', MCat.notFound );
             }
           }
       
@@ -465,13 +496,15 @@
                 emitter.emit( 'debug', MCat.logWrite + ' ' + logFile + MCat.e );
               try {
                 Util.appendFile( logFile,  logText );
+                emitter.emit( 'commandComplete' );
               }
               catch ( e ) {
-                emitter.emit( 'failShellCommand', e );
+                emitter.emit( 'commandFail', e );
               }
             }
             else {
               console.log( logText );
+              emitter.emit( 'commandComplete' );
             } 
           }
       
@@ -490,9 +523,10 @@
                   emitter.emit( 'debug', MCat.monitorOff + ' ' + requestedEvent );
                 clearInterval( library.event.timers[connection.instance][requestedEvent] );
                 delete library.event.timers[connection.instance][requestedEvent];
+                emitter.emit( 'commandComplete' );
               }
               else {
-                emitter.emit( 'failShellCommand', MCat.failEventNotFound + ': '  + requestedEvent );
+                emitter.emit( 'commandFail', MCat.failEventNotFound + ': '  + requestedEvent );
               }
             }
             else {
@@ -540,6 +574,8 @@
                                  basket.bid_amount + MCat.eventStatusLabel +  MCat.eventStatuses[basket.bid_status];
                           }
                         }
+
+                        // Buyers see cash pool only
                         else if ( connection.user_type == MCat.BUYER ) {
                           displayMsg = displayMsg + connection.instance + MCat.s + monitorMsg + eventFound + 
                             MCat.eventCashLabel + thisEvent.cash_pool;
@@ -549,9 +585,9 @@
                         clearInterval( library.event.timers[connection.instance][eventFound] );
                         delete library.event.timers[connection.instance][eventFound];
                         displayMsg = displayMsg + "\n" + connection.instance + MCat.s + MCat.eventOver + MCat.e + eventFound;
-                      }                                                   // overridding winHandler to not change prompt
+                      }                                                   // overridding serviceHandler to not change prompt
                       library.event.getDetails( connectionId, connection, function () {
-                        emitter.emit( 'winShellCommand', null, displayMsg );
+                        emitter.emit( 'commandComplete', null, displayMsg );
                       } );
                     };
                     library.event.timers[connection.instance] = library.event.timers[connection.instance] || {};
@@ -564,11 +600,11 @@
                     }
                   }
                   else {
-                    emitter.emit( 'failShellCommand', MCat.failEventNotFound + requestedEvent );
+                    emitter.emit( 'commandFail', MCat.failEventNotFound + requestedEvent );
                   }
                 }
                 else {
-                  emitter.emit( 'failShellCommand', MCat.failNoEvents );
+                  emitter.emit( 'commandFail', MCat.failNoEvents );
                 }
               }
             }
@@ -587,7 +623,7 @@
                eventFound = true; 
             }
             if ( !eventFound ) {
-              emitter.emit( 'failShellCommand', MCat.failEventNotFound );
+              emitter.emit( 'commandFail', MCat.failEventNotFound );
             }
             else {
               if ( env.context.debug ) 
@@ -595,7 +631,7 @@
               if ( connection.user_type == MCat.BUYER ) 
                 library.event.getOffers( connectionId, connection, eventId );
               else
-                emitter.emit( 'failShellCommand', MCat.failNoSupplier );
+                emitter.emit( 'commandFail', MCat.failNoSupplier );
             }
           }
       
@@ -609,15 +645,15 @@
             var basket       = command[2] && command[2].trim();
             var bps          = command[3] && command[3].trim();
             if ( !connection.events ) {
-              emitter.emit( 'failShellCommand', MCat.failNoEvents );
+              emitter.emit( 'commandFail', MCat.failNoEvents );
               return;
             }
             else if ( connection.user_type == MCat.BUYER ) {
-              emitter.emit( 'failShellCommand', MCat.failPrefix + MCat.s + MCat.failBuyerBid );
+              emitter.emit( 'commandFail', MCat.failPrefix + MCat.s + MCat.failBuyerBid );
               return;
             }
             else if ( !connection.events[eventId] ) {
-              emitter.emit( 'failShellCommand', MCat.notFound );
+              emitter.emit( 'commandFail', MCat.notFound );
             }
             else if ( eventId && basket && bps ) {
               if ( connection.events[eventId] ) {
@@ -636,15 +672,15 @@
                   library.event.placeOffer( connectionId, connection, thisBasket );
                 }
                 else {
-                  emitter.emit( 'failShellCommand', MCat.notFound );
+                  emitter.emit( 'commandFail', MCat.notFound );
                 }
               }
               else if ( !connection.events[eventId] ) {
-                emitter.emit( 'failShellCommand', MCat.notFound );
+                emitter.emit( 'commandFail', MCat.notFound );
               }
             }
             else {
-              emitter.emit( 'failShellCommand', MCat.notFound );
+              emitter.emit( 'commandFail', MCat.notFound );
             }
           }
       
@@ -660,7 +696,7 @@
                eventFound = true; 
             }
             if ( !eventFound ) {
-              emitter.emit( 'failShellCommand', MCat.failEventNotFound );
+              emitter.emit( 'commandFail', MCat.failEventNotFound );
             }
             else {
               if ( env.context.debug ) 
@@ -668,7 +704,7 @@
               if ( connection.user_type == MCat.BUYER ) 
                 library.event.getPreOffers( connectionId, connection, eventId );
               else
-                emitter.emit( 'failShellCommand', MCat.failNoSupplier );
+                emitter.emit( 'commandFail', MCat.failNoSupplier );
             }
           }
       
@@ -681,7 +717,7 @@
       
               for ( var e in connection.events ) {
                 if (  connection.events[e].is_live || connection.events[e].is_buyer_live ) {
-                  emitter.emit( 'failShellCommand', MCat.failLiveEvent );
+                  emitter.emit( 'commandFail', MCat.failLiveEvent );
                   return;
                 }
               }
@@ -693,7 +729,7 @@
               for ( var i in invoiceIds ) {
                 var iId = invoiceIds[i];
                 if (! /^[ieEI][\|\d]+$/.test( iId ) ) {
-                  emitter.emit( 'failShellCommand', MCat.failAmbiguous + iId );
+                  emitter.emit( 'commandFail', MCat.failAmbiguous + iId );
                   continue;
                 }
                 else {
@@ -706,7 +742,7 @@
                     exclude.push( iId );
                   }
                   else {
-                    emitter.emit( 'failShellCommand', MCat.notFound );
+                    emitter.emit( 'commandFail', MCat.notFound );
                     return;
                   }
                 }
@@ -714,7 +750,7 @@
               library.invoice.toggle( connectionId, connection, keep, exclude );
             }
             else {
-              emitter.emit( 'failShellCommand', MCat.notFound );
+              emitter.emit( 'commandFail', MCat.notFound );
             }
           }
       
@@ -722,12 +758,18 @@
           // unrecognized command
           //
           else {
-            emitter.emit( 'failShellCommand', MCat.notFound );
+            emitter.emit( 'commandFail', MCat.notFound );
           }
         }
       };
+      shell.env.connections[connectionId] = shell.env.connections[connectionId] || {};
+      var connection = shell.env.connections[connectionId];
       connection.id            = library.connectionCount++;
       connection.instance      = instance;
+      connection.lastAction    = MCat.successSignin;
+      connection.password      = pwd;
+      connection.sessionCookie = response.headers['set-cookie'][0];
+      connection.user          = user;
       var payload;
       try {
         payload = JSON.parse( response.body ).payload;
@@ -737,18 +779,14 @@
         return;
       }
       connection.lastActive    = new Date( payload.created );
-      connection.lastAction    = MCat.successSignin;
-      connection.password      = pwd;
-      connection.sessionCookie = response.headers['set-cookie'][0];
-      connection.user          = user;
       library.auth.getDetails( connectionId, connection, function () {
         library.event.getDetails(connectionId, connection, function () {
-          emitter.emit( 'winOCAPservice', connectionId );
+          emitter.emit( 'serviceCallComplete', connectionId );
         });
       });
     }
     else {
-      emitter.emit( 'failShellCommand', MCat.failConnect + connectionId );
+      emitter.emit( 'commandFail', MCat.failConnect + connectionId );
       return;
     }
   };
