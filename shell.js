@@ -87,18 +87,15 @@
 
   var identity = MCat.agentString + version;
   var library = new Library( identity, successHandler, emitter, Config.pageSize );
-  var authHandler = function ( connectionId, pwd ) {
-    library.auth.signIn( connectionId, pwd );
-  };
   prompt.handleCommand = function ( command ) {
     Commands( env, emitter,
       Config, MCat,
       prompt, command,
-      null, library
+      null  , library
     );
   };
   
-  var env = new Env( version, authHandler, successHandler );
+  var env = new Env( version, function ( connectionId, pwd ) {library.auth.signIn( connectionId, pwd );}, successHandler );
   prompt.isDebugging = env.context.debug;
   var libModules = ['net', 'auth', 'event', 'invoice'];
   for ( var m in libModules ) {
@@ -135,6 +132,8 @@
       connection.password      = pwd;
       connection.sessionCookie = response.headers['set-cookie'][0];
       connection.user          = user;
+      shell.env.context.user   = user;
+      shell.env.context.emulating = connection.emulating;
       var payload;
       try {
         payload = JSON.parse( response.body ).payload;
