@@ -3,15 +3,15 @@
 (function() {
 
   var Commands  = require( 'commands.js' ).Commands,
-      Config    = require( 'config/shell.js' ).Config,
-      MCat      = require( 'message-catalog/shell.js' ).MCat,
-      Env       = require( 'ocap/env.js' ).Env,
-      events    = require( 'events' ),
-      emitter   = new events.EventEmitter(),
-      Library   = require( MCat.functions ).Library,
-      Prompt    = require( 'prompt.js' ).Prompt,
-      Connector = require( 'connector.js' ).Connector,
-      version   = '0.0.1';
+    Config    = require( 'config/shell.js' ).Config,
+    MCat      = require( 'message-catalog/shell.js' ).MCat,
+    Env       = require( 'ocap/env.js' ).Env,
+    events    = require( 'events' ),
+    emitter   = new events.EventEmitter(),
+    Library   = require( MCat.functions ).Library,
+    Prompt    = require( 'prompt.js' ).Prompt,
+    Connector = require( 'connector.js' ).Connector,
+    version   = '0.0.1';
   
   var prompt = new Prompt( {
     debug     : false,
@@ -22,18 +22,18 @@
     version   : version
   } );
 
-  var failHandler = function ( promptContent, fail ) {
+  var failedHandler = function ( promptContent, failed ) {
     try {
-      if ( fail ) {
-        console.error( fail );
+      if ( failed ) {
+        console.error( failed );
       }
       if ( promptContent )  {
         prompt.content = function () { return promptContent + MCat.promptPoint; };
       }
       prompt.show();
     }
-    catch( fail ) {
-      console.error( MCat.failPrefix + fail );
+    catch( failed ) {
+      console.error( MCat.failedPrefix + failed );
       return;
     }
   };
@@ -46,61 +46,61 @@
         prompt.content = function () { return promptContent + MCat.promptPoint; };
       prompt.show();
     }
-    catch( fail ) {
-      console.error( MCat.failPrefix + fail );
+    catch( failed ) {
+      console.error( MCat.failedPrefix + failed );
       return;
     }
   };
 
   emitter.on(
-    'commandComplete',  function ( prompt, shellMsg ) {
-      successHandler( prompt,  shellMsg ); }).on(
+    'completedCommand',  function ( prompt, shellMsg ) {
+      successHandler( prompt,  shellMsg ); } ).on(
 
-    'commandFail', function ( failMsg ) {
-      process.nextTick( function () { failHandler( null, MCat.failPrefix   + ( failMsg ||
-        MCat.commandFail ) ); } ); }).on(
+    'completedServiceCall',   function ( prompt, serviceMsg ) {
+      successHandler( prompt,  serviceMsg ); } ).on(
 
     'debug', function ( msg ) {
       console.info( MCat.debugPrefix + msg );  }).on(
 
-    'failJSONParse',    function ( prompt, failMsg ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + ( failMsg ||
-        MCat.failJSONParse )); } ); }).on(
+    'failedCommand', function ( failedMsg ) {
+      process.nextTick( function () { failedHandler( null, MCat.failedPrefix   + ( failedMsg ||
+        MCat.failedCommand ) ); } ); }).on(
 
-    'failOCAPfail',     function ( prompt, failMsg ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + ( failMsg ||
-        MCat.failFail ) ); } ); }).on(
+    'failedJSONParse',    function ( prompt, failedMsg ) {
+      process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
+        MCat.failedJSONParse )); } ); }).on(
 
-    'failOCAPservice',  function ( prompt, failMsg ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + ( failMsg ||
-        MCat.failOCAPservice ) ); } ); }).on(
+    'failedOCAPfailed',     function ( prompt, failedMsg ) {
+      process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
+        MCat.failedFail ) ); } ); }).on(
 
-    'failOCAPresponse', function ( prompt, failMsg ) {
-      process.nextTick( function () { failHandler( prompt, MCat.failPrefix + ( failMsg ||
-        MCat.failOCAPresponse ) ); } ); }).on(
+    'failedOCAPservice',  function ( prompt, failedMsg ) {
+      process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
+        MCat.failedOCAPservice ) ); } ); }).on(
 
-    'serviceCallComplete',   function ( prompt, serviceMsg ) {
-      successHandler( prompt,  serviceMsg ); 
+    'failedOCAPresponse', function ( prompt, failedMsg ) {
+      process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
+        MCat.failedOCAPresponse ) ); } );
     }
-
   );
 
-  var identity = MCat.agentString + version;
-  var library = new Library( identity, successHandler, emitter, Config.pageSize );
+  var library = new Library( MCat.agentString + version, successHandler, emitter, Config.pageSize );
   prompt.handleCommand = function ( command ) {
+
+    // prior to auth we provide a shell with limited capabilities.
     Commands( env, emitter,
       Config, MCat,
       prompt, command,
       null  , library
     );
   };
-  
   var env = new Env( version, function ( connectionId, pwd ) {library.auth.signIn( connectionId, pwd );}, successHandler );
   prompt.isDebugging = env.context.debug;
   var libModules = ['net', 'auth', 'event', 'invoice'];
   for ( var m in libModules ) {
     library[libModules[m]].isDebugging = env.context.debug;
   }
+
   library.auth.access = function ( connectionId, pwd, user, instance, response ) {
     if ( response ) {
       if ( library.auth.isDebugging )
@@ -113,7 +113,7 @@
         connection.user      = tokens[0].trim();
         connection.instance  = tokens[1].trim();
         connection.emulating = ( tokens[2] && tokens[2].trim() );
-        emitter.emit( 'commandComplete', cId );
+        emitter.emit( 'completedCommand', cId );
       };
       var shell = new Connector( env, prompt, library, cachedConnectionHandler );
       shell.prompt.handleCommand = function ( command ) {
@@ -139,18 +139,18 @@
         payload = JSON.parse( response.body ).payload;
       }
       catch( e ) {
-        emitter.emit( 'failJSONParse', e );
+        emitter.emit( 'failedJSONParse', e );
         return;
       }
       connection.lastActive    = new Date( payload.created );
       library.auth.getDetails( connectionId, connection, function () {
         library.event.getDetails(connectionId, connection, function () {
-          emitter.emit( 'serviceCallComplete', connectionId );
+          emitter.emit( 'completedServiceCall', connectionId );
         });
       });
     }
     else {
-      emitter.emit( 'commandFail', MCat.failConnect + connectionId );
+      emitter.emit( 'failedCommand', MCat.failedConnect + connectionId );
       return;
     }
   }; 
