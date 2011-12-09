@@ -96,7 +96,6 @@
   for ( var m in libModules ) {
     library[libModules[m]].isDebugging = env.context.debug;
   }
-  
   library.auth.access = function ( connectionId, pwd, user, instance, response ) {
     if ( response ) {
       if ( library.auth.isDebugging )
@@ -112,7 +111,7 @@
         emitter.emit( 'commandComplete', cId );
       };
       var shell = new Connector( env, prompt, library, cachedConnectionHandler );
-      shell.prompt.handleCommand = function (command) {
+      shell.prompt.handleCommand = function ( command ) {
         Commands( env, emitter,
           Config, MCat,
           connectionId, connection,
@@ -148,5 +147,6 @@
       emitter.emit( 'commandFail', MCat.failConnect + connectionId );
       return;
     }
-  };
-}(this));
+  }; 
+}( this ) );
+
