@@ -21,7 +21,7 @@
     title     : MCat.title,
     version   : version
   } );
-  
+
   var failHandler = function ( promptContent, fail ) {
     try {
       if ( fail ) {
@@ -90,6 +90,14 @@
   var authHandler = function ( connectionId, pwd ) {
     library.auth.signIn( connectionId, pwd );
   };
+  prompt.handleCommand = function ( command ) {
+    Commands( env, emitter,
+      Config, MCat,
+      prompt, command,
+      null, library
+    );
+  };
+  
   var env = new Env( version, authHandler, successHandler );
   prompt.isDebugging = env.context.debug;
   var libModules = ['net', 'auth', 'event', 'invoice'];
@@ -114,10 +122,9 @@
       shell.prompt.handleCommand = function ( command ) {
         Commands( env, emitter,
           Config, MCat,
-          connectionId, connection,
-          library,
-          shell, prompt,
-          command
+          prompt, command,
+          shell, library,
+          connectionId, connection
         );
       };
       shell.env.connections[connectionId] = shell.env.connections[connectionId] || {};
