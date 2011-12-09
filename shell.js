@@ -9,9 +9,7 @@
       events    = require( 'events' ),
       emitter   = new events.EventEmitter(),
       Library   = require( MCat.functions ).Library,
-      net       = require( 'net' ),
       Prompt    = require( 'prompt.js' ).Prompt,
-      repl      = require( 'repl' ),
       Connector = require( 'connector.js' ).Connector,
       version   = '0.0.1';
   
@@ -87,14 +85,12 @@
 
   );
 
-  var library = new Library( MCat.agentString + version, successHandler, emitter, Config.pageSize );
-  
+  var identity = MCat.agentString + version;
+  var library = new Library( identity, successHandler, emitter, Config.pageSize );
   var authHandler = function ( connectionId, pwd ) {
     library.auth.signIn( connectionId, pwd );
   };
-
   var env = new Env( version, authHandler, successHandler );
-
   prompt.isDebugging = env.context.debug;
   var libModules = ['net', 'auth', 'event', 'invoice'];
   for ( var m in libModules ) {
