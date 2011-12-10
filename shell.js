@@ -2,18 +2,18 @@
           
 (function() {
 
-  var Commands  = require( 'commands.js' ).Commands,
-    Config    = require( 'config/shell.js' ).Config,
-    MCat      = require( 'message-catalog/shell.js' ).MCat,
-    Env       = require( 'ocap/env.js' ).Env,
-    events    = require( 'events' ),
-    emitter   = new events.EventEmitter(),
-    Library   = require( MCat.functions ).Library,
-    Prompt    = require( 'prompt.js' ).Prompt,
-    Connector = require( 'connector.js' ).Connector,
-    version   = '0.0.1';
+  var Commands = require( 'commands.js' ).Commands,
+    Config     = require( 'config/shell.js' ).Config,
+    MCat       = require( 'message-catalog/shell.js' ).MCat,
+    Env        = require( 'ocap/env.js' ).Env,
+    events     = require( 'events' ),
+    emitter    = new events.EventEmitter(),
+    Library    = require( MCat.functions ).Library,
+    Prompt     = require( 'prompt.js' ).Prompt,
+    Connector  = require( 'connector.js' ).Connector,
+    version    = '0.0.1';
   
-  var prompt = new Prompt( {
+  var prompt  = new Prompt( {
     debug     : false,
     default   : function () { return MCat.promptPrefix + MCat.promptPoint; },
     exitMsg   : MCat.exit,
@@ -38,6 +38,20 @@
     }
   };
  
+  var subPromptHandler = function ( promptContent, msg ) {
+    try {
+      if ( msg ) 
+        console.log( msg );
+      if ( promptContent ) 
+        prompt.content = function () { return promptContent + MCat.c; };
+      prompt.show();
+    }
+    catch( failed ) {
+      console.error( MCat.failedPrefix + failed );
+      return;
+    }
+  };
+
   var successHandler = function ( promptContent, msg ) {
     try {
       if ( msg ) 
@@ -64,30 +78,33 @@
 
     'failedCommand', function ( failedMsg ) {
       process.nextTick( function () { failedHandler( null, MCat.failedPrefix   + ( failedMsg ||
-        MCat.failedCommand ) ); } ); }).on(
+        MCat.failedCommand ) ); } ); } ).on(
 
     'failedJSONParse',    function ( prompt, failedMsg ) {
       process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
-        MCat.failedJSONParse )); } ); }).on(
+        MCat.failedJSONParse )); } ); } ).on(
 
     'failedOCAPfailed',     function ( prompt, failedMsg ) {
       process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
-        MCat.failedFail ) ); } ); }).on(
+        MCat.failedFail ) ); } ); } ).on(
 
     'failedOCAPservice',  function ( prompt, failedMsg ) {
       process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
-        MCat.failedOCAPservice ) ); } ); }).on(
+        MCat.failedOCAPservice ) ); } ); } ).on(
 
     'failedOCAPresponse', function ( prompt, failedMsg ) {
       process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
-        MCat.failedOCAPresponse ) ); } );
+        MCat.failedOCAPresponse ) ); } ); } ).on(
+    
+    'schedulePrompt', function ( prompt, msg, flag ) {
+      subPromptHandler( prompt, msg, flag ); 
     }
   );
 
   var library = new Library( MCat.agentString + version, successHandler, emitter, Config.pageSize );
   prompt.handleCommand = function ( command ) {
 
-    // prior to auth we provide a shell with limited capabilities.
+    // prior to auth provide shell with limited capabilities
     Commands( env, emitter,
       Config, MCat,
       prompt, command,
@@ -117,6 +134,9 @@
       };
       var shell = new Connector( env, prompt, library, cachedConnectionHandler );
       shell.prompt.handleCommand = function ( command ) {
+
+        // authenticated shell with access to commands
+        // that wrap library
         Commands( env, emitter,
           Config, MCat,
           prompt, command,
@@ -132,8 +152,6 @@
       connection.password      = pwd;
       connection.sessionCookie = response.headers['set-cookie'][0];
       connection.user          = user;
-      shell.env.context.user   = user;
-      shell.env.context.emulating = connection.emulating;
       var payload;
       try {
         payload = JSON.parse( response.body ).payload;

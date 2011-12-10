@@ -132,7 +132,34 @@ Once successfully connected to an OCAP instance, the environment can be displaye
 
 # EVENTS
 
-Events can be explored by dumping all the information to the screen or log, or optionally pulling out specific attributes for viewing:
+Events can be created, updated, and explored:
+
+## CREATE
+
+    autoiameri1@autoiameri> s
+    Start date: 2015-01-05
+    Duration: 30m
+    Pay-thru: 2015-01-07
+    New check: 2015-01-06
+    Cash pool: 500000
+      Basket #1
+        Minimum days: 3
+        Maximum days: 10
+        Minimum offer: .01
+        Offer increment: .01
+        Hurdle type: apr
+        Hurdle rate: 8
+      Basket #2
+        Minimum days: 11
+        Maximum days: 30
+        Minimum offer: .03
+        Offer increment: .01
+        Hurdle type: apr
+        Hurdle rate: 10
+      Basket #3
+        Minimum days: .
+    event created.
+    autoiameri1@autoiameri> s
 
 ## DETAIL 
 

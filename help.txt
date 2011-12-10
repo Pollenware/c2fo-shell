@@ -50,6 +50,22 @@
 --------------------------------------------------------------------------------
  r                  repl        - start TCP REPL server      > r
 --------------------------------------------------------------------------------
+ s                  schedule    - schedule an event          > s
+                                                          Start date: 2015-01-05
+                                                          Duration: 30m
+                                                          Pay-thru: 2015-01-07
+                                                          New check: 2015-01-06
+                                                          Cash pool: 500000
+                                                            Basket #1
+                                                            Minimum days: 3
+                                                            Maximum days: 10
+                                                            Minimum Offer: .01
+                                                            Offer increment: .01
+                                                            Hurdle type: apr
+                                                            Hurdle rate: 8
+                                                          Basket #2 
+                                                            Minimum days: .
+--------------------------------------------------------------------------------
  t <inv> <inv>...   toggle      - supplier incl/excl invoices> t i24849 e2854... 
  t <inv|sid> <inv|sid>...       - buyer incl/excl invoices   > t i2144|248731... 
 --------------------------------------------------------------------------------
