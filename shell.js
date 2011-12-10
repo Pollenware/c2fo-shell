@@ -106,7 +106,6 @@
 
     // prior to auth provide shell with limited capabilities
     Commands( env, emitter,
-      Config, MCat,
       prompt, command,
       null  , library
     );
@@ -138,7 +137,6 @@
         // authenticated shell with access to commands
         // that wrap library
         Commands( env, emitter,
-          Config, MCat,
           prompt, command,
           shell, library,
           connectionId, connection
