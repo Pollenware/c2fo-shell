@@ -1,4 +1,4 @@
-Close OPS-143,OPS-145,OPS-146 
+Close DEV-67, DEV-68, DEV-69, DEV-70 
 buyer
   1 edit event (cash_pool, amount, start_date, end_date, basket params, etc.)
   2 end an event

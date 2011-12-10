@@ -137,29 +137,42 @@ Events can be created, updated, and explored:
 ## CREATE
 
     autoiameri1@autoiameri> s
-    Start date: 2015-01-05
-    Duration: 30m
-    Pay-thru: 2015-01-07
-    New check: 2015-01-06
-    Cash pool: 500000
+    Start time (YYYY-MM-DD HH:MM): 2011-12-20 11:00
+    Duration (in minutes): 45
+    Pay-thru date (YYYY-MM-DD): 2011-12-22
+    New check date (YYYY-MM-DD): 2011-12-22
+    Cash pool: 1000000
       Basket #1
-        Minimum days: 3
-        Maximum days: 10
-        Minimum offer: .01
+        Minimum days (enter "e" for "earliest possible"): e
+        Maximum days (enter "L: for "latest possible"): 10
+        Starting offer: .01
         Offer increment: .01
         Hurdle type: apr
-        Hurdle rate: 8
+        Hurdle rate: 5
       Basket #2
-        Minimum days: 11
-        Maximum days: 30
-        Minimum offer: .03
+        Minimum days (enter "e" for "earliest possible"): 11
+        Maximum days (enter "L: for "latest possible"): 30
+        Starting offer: .01
         Offer increment: .01
         Hurdle type: apr
-        Hurdle rate: 10
+        Hurdle rate: 5
       Basket #3
-        Minimum days: .
-    event created.
-    autoiameri1@autoiameri> s
+        Minimum days (enter "e" for "earliest possible"): 31
+        Maximum days (enter "L: for "latest possible"): 45
+        Starting offer: .01
+        Offer increment: .01
+        Hurdle type: apr
+        Hurdle rate: 5
+      Basket #4
+        Minimum days (enter "e" for "earliest possible"): 46
+        Maximum days (enter "L: for "latest possible"): L
+        Starting offer: .01
+        Offer increment: .01
+        Hurdle type: apr
+        Hurdle rate: 5
+      Basket #5
+        Minimum days (enter "e" for "earliest possible"): .
+    autoiameri1@autoiameri>
 
 ## DETAIL 
 
