@@ -1,0 +1,6 @@
+{ "name" : "ocap",
+  "main" : "./node_modules/ocap/main.js",
+  "directories": {
+    "lib": "node_modules"
+  }
+}
