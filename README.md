@@ -253,6 +253,11 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
     shartleyd787@autoiameri> i event=16
     [...]
  
+### BY BASKET
+
+    shartleyd787@autoiameri> i basket=1234
+    [...]
+
 ### SPECIFY SORT ORDER OF RETIEVED PAGE
 
     shartleyd787@autoiameri> i due>2012-11-01 sortOn=amount
