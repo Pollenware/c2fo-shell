@@ -27,6 +27,7 @@
                                                              > i supplier=21
                                                              > i sortOn=amount
                                                              > i event=165
+                                                             > i basket=1234                                                             
  i c                inv clear   - erase invoice cache        > i c
  i p                inv print   - show invoice cache         > i p
 --------------------------------------------------------------------------------
