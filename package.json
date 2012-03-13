@@ -2,5 +2,6 @@
   "main" : "./index.js",
   "directories": {
     "lib": "node_modules"
-  }
+  },
+  "version": "0.0.1"
 }
