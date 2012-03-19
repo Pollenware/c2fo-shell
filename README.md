@@ -333,9 +333,9 @@ A simple logging facility allows the ocap-shell user to write her data to disk a
 
 Pre-offers before an event and offers during an event are both supported transparently within the *o* (*offer*) command:
 
-## OFFER (supplier-only)
+## OFFER (supplier-only) - Not acting as bid agent
 
-    shartleyd787@autoiameri> b 163 0
+    shartleyd787@autoiameri> b 163 0 f
     {
       "id": 66929,
       "total_invoice_amount": 8778.64,
@@ -344,7 +344,20 @@ Pre-offers before an event and offers during an event are both supported transpa
     [..]
     shartleyd787@autoiameri> o 163 66929 120
     autoiameri - offer placed
-    shartleyd787@autoiameri> 
+    shartleyd787@autoiameri>
+
+## OFFER (supplier-only) - Acting as bid agent
+
+    shartleyd787@autoiameri> b 163 0 t
+    {
+      "id": 66929,
+      "total_invoice_amount": 8778.64,
+      "num_invoices": 4,
+      "supplier_id": 31551276,
+    [..]
+    shartleyd787@autoiameri> o 163 66929 120
+    autoiameri - offer placed
+    shartleyd787@autoiameri>
 
 ---
 
