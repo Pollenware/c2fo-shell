@@ -1,4 +1,4 @@
-c2fo-shell - text-based interface to Pollenware optimized collaborative auction platform
+c2fo-shell - text-based interface to Pollenware collaborative cash flow optimization platform
 
 # USAGE
 
