@@ -5,7 +5,7 @@
   var Commands = require( 'commands.js' ).Commands,
     Config     = require( 'config/shell.js' ).Config,
     MCat       = require( 'message-catalog/shell.js' ).MCat,
-    Env        = require( 'ocap/env.js' ).Env,
+    Env        = require( 'c2fo/env.js' ).Env,
     events     = require( 'events' ),
     emitter    = new events.EventEmitter(),
     Library    = require( MCat.functions ).Library,
@@ -84,17 +84,17 @@
       process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
         MCat.failedJSONParse )); } ); } ).on(
 
-    'failedOCAPfailed',     function ( prompt, failedMsg ) {
+    'failedC2FOfailed',     function ( prompt, failedMsg ) {
       process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
         MCat.failedFail ) ); } ); } ).on(
 
-    'failedOCAPservice',  function ( prompt, failedMsg ) {
+    'failedC2FOservice',  function ( prompt, failedMsg ) {
       process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
-        MCat.failedOCAPservice ) ); } ); } ).on(
+        MCat.failedC2FOservice ) ); } ); } ).on(
 
-    'failedOCAPresponse', function ( prompt, failedMsg ) {
+    'failedC2FOresponse', function ( prompt, failedMsg ) {
       process.nextTick( function () { failedHandler( prompt, MCat.failedPrefix + ( failedMsg ||
-        MCat.failedOCAPresponse ) ); } ); } ).on(
+        MCat.failedC2FOresponse ) ); } ); } ).on(
     
     'schedulePrompt', function ( prompt, msg, flag ) {
       subPromptHandler( prompt, msg, flag ); 

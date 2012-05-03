@@ -1,9 +1,9 @@
-ocap-shell - text-based interface to Pollenware optimized collaborative auction platform
+c2fo-shell - text-based interface to Pollenware optimized collaborative auction platform
 
 # USAGE
 
-    $ ./ocap -h
-    Usage: ocap [options]
+    $ ./c2fo -h
+    Usage: c2fo [options]
 
     Options:
 
@@ -16,34 +16,34 @@ ocap-shell - text-based interface to Pollenware optimized collaborative auction 
 
 # SIGN IN
 
-Signing into the system with authentication credentials can take place either from the system prompt, when booting ocap-shell, or after the shell is up, as a command:
+Signing into the system with authentication credentials can take place either from the system prompt, when booting c2fo-shell, or after the shell is up, as a command:
 
 ## FROM SYSTEM PROMPT
 
 ### FAIL
 
-    $ ./ocap -u c2foUsername -i c2foInstance
+    $ ./c2fo -u c2foUsername -i c2foInstance
     Password: ***********
     connecting...
     [error] check the login details, host or network
     connection could not be established: c2foUsername@c2foInstance
-    ocap (pollenware OCAP) v0.0.1 Mon Nov 14 2011 00:59:42 GMT+0000 (UTC)
+    c2fo (pollenware C2FO) v0.0.1 Mon Nov 14 2011 00:59:42 GMT+0000 (UTC)
     type 'h' for help
-    ocap> 
+    c2fo> 
 
 ### SUCCEED
 
-    $ ./ocap -u c2foUsername -i c2foInstance -d
+    $ ./c2fo -u c2foUsername -i c2foInstance -d
     Password: ***********
     connecting...
     c2foUsername@c2foInstance> 
 
-## WITHIN OCAP CLI
+## WITHIN C2FO CLI
 
-    $ ./ocap 
-    ocap (pollenware OCAP) v0.0.1 Mon Nov 14 2011 00:59:42 GMT+0000 (UTC)
+    $ ./c2fo 
+    c2fo (pollenware C2FO) v0.0.1 Mon Nov 14 2011 00:59:42 GMT+0000 (UTC)
     type 'h' for help
-    ocap> c2foUsername@c2foInstance
+    c2fo> c2foUsername@c2foInstance
     Password: **********
     connecting...
     c2foUsername@c2foInstance> 
@@ -52,7 +52,7 @@ Signing into the system with authentication credentials can take place either fr
 
 # CONNECTIONS
 
-ocap-shell handles multiplexing to many OCAP instances via support for separate connections and an ability to switch between them:
+c2fo-shell handles multiplexing to many C2FO instances via support for separate connections and an ability to switch between them:
 
 ## LIST
 
@@ -94,7 +94,7 @@ ocap-shell handles multiplexing to many OCAP instances via support for separate 
 
 # ENVIRONMENT
 
-Once successfully connected to an OCAP instance, the environment can be displayed:
+Once successfully connected to an C2FO instance, the environment can be displayed:
 
 ## DETAIL
 
@@ -221,7 +221,7 @@ Relevant baskets within an event can also be displayed:
 
 # INVOICES
 
-Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_ is defined as the number of records configured in `message-catalog/ocap/invoice.js/MCat.invoicesPageSize`.  ocap-shell keeps track of the pagination and will pull down new invoices with every call until there are no more to retrieve.  Once the ocap-shell user has locally downloaded the invoice set she needs, they can be printed, logged, or otherwise manipulated:
+Invoices are pulled out of an C2FO instance _one page at a time_, where a _page_ is defined as the number of records configured in `message-catalog/c2fo/invoice.js/MCat.invoicesPageSize`.  c2fo-shell keeps track of the pagination and will pull down new invoices with every call until there are no more to retrieve.  Once the c2fo-shell user has locally downloaded the invoice set she needs, they can be printed, logged, or otherwise manipulated:
 
 ## DOWNLOAD 1 PAGE
 
@@ -302,7 +302,7 @@ Invoices are pulled out of an OCAP instance _one page at a time_, where a _page_
 
 # LOG
 
-A simple logging facility allows the ocap-shell user to write her data to disk at any time:
+A simple logging facility allows the c2fo-shell user to write her data to disk at any time:
 
 ## PRINT
 
@@ -318,7 +318,7 @@ A simple logging facility allows the ocap-shell user to write her data to disk a
 ## APPEND CURRENT TO DISK
 
     shartleyd787@autoiameri> l w
-    writing log to log/ocap.log...
+    writing log to log/c2fo.log...
     shartleyd787@autoiameri> 
 
 ## CLEAR

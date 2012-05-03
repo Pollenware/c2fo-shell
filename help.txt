@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
- <user>@<instance>  (connect)   - connect to OCAP instance   > betty@buyer
+ <user>@<instance>  (connect)   - connect to C2FO instance   > betty@buyer
  <user>@<instance>@<emulate>    - admin connect, emulating   > jon@buyer@buyer1
 --------------------------------------------------------------------------------
  a <yyyy-mm-dd>     award       - show award results for day > a 2011-09-23
